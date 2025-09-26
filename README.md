@@ -1,51 +1,57 @@
 # PruebaTecnicaFanz
 
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+
 Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeScript. Esta aplicación permite crear, editar y gestionar mapas de asientos para teatros, auditorios y otros espacios con múltiples plateas.
 
 ## 🎯 Características Principales
 
-- **Constructor Visual**: Interfaz drag-and-drop para crear mapas de asientos
-- **Múltiples Plateas**: Soporte para múltiples secciones (plateas) con filas y asientos
-- **Gestión de Estados**: Control de disponibilidad de asientos (disponible, ocupado, reservado)
-- **Exportación/Importación**: Guardar y cargar mapas en formato JSON
-- **Selección Masiva**: Herramientas para seleccionar y modificar múltiples asientos
-- **Interfaz Responsiva**: Diseño adaptativo para diferentes tamaños de pantalla
-- **Integración con Seats.io**: Renderizado avanzado de mapas de asientos
+* **Constructor Visual**: Interfaz drag-and-drop para crear mapas de asientos
+* **Múltiples Plateas**: Soporte para múltiples secciones (plateas) con filas y asientos
+* **Gestión de Estados**: Control de disponibilidad de asientos (disponible, ocupado, reservado)
+* **Exportación/Importación**: Guardar y cargar mapas en formato JSON
+* **Selección Masiva**: Herramientas para seleccionar y modificar múltiples asientos
+* **Interfaz Responsiva**: Diseño adaptativo para diferentes tamaños de pantalla
+* **Integración con Seats.io**: Renderizado avanzado de mapas de asientos
 
 ## 🚀 Instalación
 
 ### Prerrequisitos
 
-- Node.js 18+ 
-- npm o yarn
+* Node.js 18+
+* npm o yarn
 
 ### Pasos de Instalación
 
 1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/tu-usuario/PruebaTecnicaFanz.git
-   cd PruebaTecnicaFanz
-   ```
+
+``` bash
+git clone https://github.com/tu-usuario/PruebaTecnicaFanz.git
+cd PruebaTecnicaFanz
+```
 
 2. **Instalar dependencias**
-   ```bash
-   cd seatmapbuilder
-   npm install
-   ```
+
+``` bash
+cd seatmapbuilder
+npm install
+```
 
 3. **Ejecutar en modo desarrollo**
-   ```bash
-   npm run dev
-   ```
+
+``` bash
+npm run dev
+```
 
 4. **Abrir en el navegador**
-   ```
-   http://localhost:3000
-   ```
+
+```
+http://localhost:3000
+```
 
 ## 📦 Scripts Disponibles
 
-```bash
+``` bash
 # Desarrollo
 npm run dev          # Ejecuta el servidor de desarrollo
 
@@ -60,7 +66,6 @@ npm run lint          # Ejecuta ESLint para verificar el código
 ## 🏗️ Estructura del Proyecto
 
 ```
-PruebaTecnicaFanz/
 ├── seatmapbuilder/           # Aplicación principal Next.js
 │   ├── app/                  # Páginas y layouts de Next.js
 │   │   ├── globals.css       # Estilos globales
@@ -97,41 +102,44 @@ PruebaTecnicaFanz/
 
 ### Gestión de Asientos
 
-- **Seleccionar asientos**: Click individual o arrastrar para selección múltiple
-- **Cambiar estado**: Usar los botones de estado (Disponible, Ocupado, Reservado)
-- **Eliminar asientos**: Seleccionar y usar el botón de eliminar
-- **Agregar asientos**: Botón para añadir 10 asientos a la fila seleccionada
+* **Seleccionar asientos**: Click individual o arrastrar para selección múltiple
+* **Cambiar estado**: Usar los botones de estado (Disponible, Ocupado, Reservado)
+* **Eliminar asientos**: Seleccionar y usar el botón de eliminar
+* **Agregar asientos**: Botón para añadir 10 asientos a la fila seleccionada
 
 ### Exportar/Importar
 
-- **Guardar mapa**: Usar el botón "Guardar JSON" para descargar el archivo
-- **Cargar mapa**: Usar el botón "Cargar JSON" para importar un mapa existente
-- **Limpiar mapa**: Botón para resetear el mapa actual
+* **Guardar mapa**: Usar el botón "Guardar JSON" para descargar el archivo
+* **Cargar mapa**: Usar el botón "Cargar JSON" para importar un mapa existente
+* **Limpiar mapa**: Botón para resetear el mapa actual
 
 ## 🔧 Tecnologías Utilizadas
 
 ### Frontend
-- **Next.js 15.5.4** - Framework React con SSR
-- **React 19.1.1** - Biblioteca de UI
-- **TypeScript 5.9.2** - Tipado estático
-- **Tailwind CSS 4.1.13** - Framework de estilos
-- **Framer Motion 12.23.22** - Animaciones
+
+* **Next.js 15.5.4** \- Framework React con SSR
+* **React 19.1.1** \- Biblioteca de UI
+* **TypeScript 5.9.2** \- Tipado estático
+* **Tailwind CSS 4.1.13** \- Framework de estilos
+* **Framer Motion 12.23.22** \- Animaciones
 
 ### Herramientas de Desarrollo
-- **ESLint** - Linter de código
-- **PostCSS** - Procesador de CSS
-- **Autoprefixer** - Prefijos CSS automáticos
+
+* **ESLint** \- Linter de código
+* **PostCSS** \- Procesador de CSS
+* **Autoprefixer** \- Prefijos CSS automáticos
 
 ### Validación y Utilidades
-- **Zod 3.23.8** - Validación de esquemas
-- **clsx** - Utilidad para clases CSS condicionales
-- **Lucide React** - Iconos SVG
+
+* **Zod 3.23.8** \- Validación de esquemas
+* **clsx** \- Utilidad para clases CSS condicionales
+* **Lucide React** \- Iconos SVG
 
 ## 📊 Estructura de Datos
 
 El mapa de asientos se almacena en formato JSON con la siguiente estructura:
 
-```json
+``` json
 {
   "name": "Nombre del Mapa",
   "plateas": [
@@ -163,22 +171,27 @@ El mapa de asientos se almacena en formato JSON con la siguiente estructura:
 ## 🎨 Personalización
 
 ### Estilos
+
 Los estilos se pueden personalizar modificando:
-- `app/globals.css` - Estilos globales
-- `tailwind.config.js` - Configuración de Tailwind CSS
+
+* `app/globals.css` \- Estilos globales
+* `tailwind.config.js` \- Configuración de Tailwind CSS
 
 ### Componentes
+
 Los componentes UI están en `components/ui/` y siguen el patrón de diseño de shadcn/ui.
 
 ## 🚀 Despliegue
 
 ### Vercel (Recomendado)
+
 1. Conectar el repositorio a Vercel
 2. Configurar el directorio de build como `seatmapbuilder`
 3. Desplegar automáticamente
 
 ### Otras Plataformas
-```bash
+
+``` bash
 cd seatmapbuilder
 npm run build
 npm run start
@@ -200,6 +213,6 @@ Este proyecto es parte de una prueba técnica para Fanz.
 
 Para preguntas o soporte, contacta al desarrollador del proyecto.
 
----
+- - -
 
 **Desarrollado por Pedro González Núñez**
