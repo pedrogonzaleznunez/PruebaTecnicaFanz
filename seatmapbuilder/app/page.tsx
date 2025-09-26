@@ -1,19 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
-import { Plus, Trash2, Grid3X3, ChevronLeft, ChevronRight, Menu } from "lucide-react"
+import { Plus, Trash2, Grid3X3, ChevronLeft, ChevronRight, Menu, Save, Edit3 } from "lucide-react"
 import { SeatCanvas } from "../components/SeatCanvas"
 import { JsonManager } from "../components/JsonManager"
 import type { Platea, Row, Seat } from "../lib/schema"
 import { generatePlateaId, generateFilaId, generateSeatId, extractPlateaNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
+import { Accordion } from "../components/ui/accordion"
 
 export default function SeatMapBuilder() {
   const [plateas, setPlateas] = useState<Platea[]>([])
   const [selectedPlatea, setSelectedPlatea] = useState<string | null>(null)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const [selectedPlateas, setSelectedPlateas] = useState<string[]>([])
   const [mapName, setMapName] = useState("")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -22,6 +24,68 @@ export default function SeatMapBuilder() {
     console.log('Toggle sidebar clicked, current state:', sidebarCollapsed)
     setSidebarCollapsed(!sidebarCollapsed)
   }
+
+  // Toggle platea selection
+  const togglePlateaSelection = (plateaId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    setSelectedPlateas(prev => 
+      prev.includes(plateaId) 
+        ? prev.filter(id => id !== plateaId)
+        : [...prev, plateaId]
+    )
+  }
+
+  // Listen for platea selection from canvas
+  useEffect(() => {
+    const handleSelectPlateaInSidebar = (event: CustomEvent) => {
+      const { plateaId } = event.detail
+      setSelectedPlatea(plateaId)
+    }
+
+    window.addEventListener('selectPlateaInSidebar', handleSelectPlateaInSidebar as EventListener)
+    
+    return () => {
+      window.removeEventListener('selectPlateaInSidebar', handleSelectPlateaInSidebar as EventListener)
+    }
+  }, [])
+
+  // Calculate selected seats count
+  const selectedSeats = plateas.reduce((sum, platea) => 
+    sum + platea.rows.reduce((rowSum, row) => 
+      rowSum + row.seats.filter(seat => seat.status === 'selected').length, 0), 0)
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // DEL key - Delete selected rows or seats
+      if (event.key === 'Delete') {
+        if (selectedRows.length > 0) {
+          deleteSelectedRows()
+        } else if (selectedSeats > 0) {
+          deleteSelectedSeats()
+        }
+      }
+      
+      // CTRL+Z - Undo (placeholder for future implementation)
+      if (event.ctrlKey && event.key === 'z') {
+        event.preventDefault()
+        // TODO: Implement undo functionality
+        console.log('Undo functionality not yet implemented')
+      }
+      
+      // CTRL+S - Save map
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault()
+        saveMap()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [selectedRows, selectedSeats])
 
   // Confirmation dialogs
   const [confirmations, setConfirmations] = useState({
@@ -43,6 +107,11 @@ export default function SeatMapBuilder() {
       newPlateas.push(newPlatea)
     }
     setPlateas([...plateas, ...newPlateas])
+    
+    // Auto-seleccionar la primera platea nueva
+    if (newPlateas.length > 0) {
+      setSelectedPlatea(newPlateas[0].id)
+    }
   }
 
   const addRowToSelectedPlatea = (count = 1) => {
@@ -68,6 +137,30 @@ export default function SeatMapBuilder() {
     }))
   }
 
+  const addRowToSpecificPlatea = (plateaId: string, count = 1) => {
+    setPlateas(plateas.map(platea => {
+      if (platea.id === plateaId) {
+        const plateaNumber = extractPlateaNumber(platea.id)
+        const newRows: Row[] = []
+        for (let i = 0; i < count; i++) {
+          const rowNumber = platea.rows.length + i + 1
+          const newRow: Row = {
+            id: generateFilaId(plateaNumber, rowNumber),
+            label: `Fila ${rowNumber}`,
+            seats: [],
+            selected: false,
+          }
+          newRows.push(newRow)
+        }
+        return { ...platea, rows: [...platea.rows, ...newRows] }
+      }
+      return platea
+    }))
+    
+    // Auto-seleccionar la platea en el sidebar
+    setSelectedPlatea(plateaId)
+  }
+
   const deleteSelectedRows = () => {
     if (selectedRows.length === 0) return
     setPendingAction({ type: 'deleteRows', data: { count: selectedRows.length } })
@@ -80,6 +173,34 @@ export default function SeatMapBuilder() {
       rows: platea.rows.filter(row => !selectedRows.includes(row.id))
     })))
     setSelectedRows([])
+  }
+
+  const deleteSelectedSeats = () => {
+    if (selectedSeats === 0) return
+    
+    setPlateas(plateas.map(platea => ({
+      ...platea,
+      rows: platea.rows.map(row => ({
+        ...row,
+        seats: row.seats.filter(seat => seat.status !== 'selected')
+      }))
+    })))
+  }
+
+  const saveMap = () => {
+    // Auto-save functionality - could be extended to save to localStorage or backend
+    const mapData = {
+      name: mapName || 'Mapa sin nombre',
+      plateas,
+      createdAt: new Date().toISOString(),
+      version: '1.0'
+    }
+    
+    // Save to localStorage as backup
+    localStorage.setItem('seatmapbuilder_autosave', JSON.stringify(mapData))
+    
+    // Show success feedback
+    console.log('Mapa guardado automáticamente')
   }
 
   const addSeatsToSelectedRows = (seatCount: number) => {
@@ -158,9 +279,6 @@ export default function SeatMapBuilder() {
   const occupiedSeats = plateas.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => 
       rowSum + row.seats.filter(s => s.status === "occupied").length, 0), 0)
-  const selectedSeats = plateas.reduce((sum, platea) => 
-    sum + platea.rows.reduce((rowSum, row) => 
-      rowSum + row.seats.filter(s => s.status === "selected").length, 0), 0)
 
   const markSelectedSeatsAs = (status: "available" | "occupied") => {
     setPlateas(plateas.map(platea => ({
@@ -197,6 +315,38 @@ export default function SeatMapBuilder() {
               <h1 className="text-lg font-semibold text-gray-800">SeatMapBuilder</h1>
               <p className="text-xs text-gray-500">Editor de mapas de asientos</p>
             </div>
+            <div className="flex items-center gap-3 ml-6">
+              <div className="relative">
+                <Input
+                  placeholder="Nombre del mapa"
+                  value={mapName}
+                  onChange={(e) => setMapName(e.target.value)}
+                  className="bg-gray-50 border-gray-200 text-gray-700 placeholder:text-gray-400 rounded-xl text-sm w-48 pr-8"
+                />
+                <button
+                  onClick={() => {
+                    const newName = prompt('Nuevo nombre del mapa:', mapName)
+                    if (newName !== null) {
+                      setMapName(newName)
+                    }
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Editar nombre del mapa"
+                >
+                  <Edit3 className="h-3 w-3" />
+                </button>
+              </div>
+              <Button
+                onClick={saveMap}
+                variant="outline"
+                size="sm"
+                className="border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 rounded-xl"
+                title="Guardar mapa (Ctrl+S)"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Guardar
+              </Button>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <Button 
@@ -204,6 +354,7 @@ export default function SeatMapBuilder() {
               onClick={clearMap}
               className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-sm"
             >
+              <Plus className="h-4 w-4 mr-2" />
               Nuevo mapa
             </Button>
             <JsonManager
@@ -225,10 +376,9 @@ export default function SeatMapBuilder() {
           }`}
         >
           {!sidebarCollapsed && (
-            <div className="space-y-4">
+            <div className="space-y-3">
             {/* Platea Management */}
-            <div className="border border-gray-200 rounded-2xl p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Plateas</h2>
+            <Accordion title="Plateas" defaultOpen={true}>
               <div className="space-y-2">
                 <Button 
                   onClick={() => addPlatea(1)} 
@@ -238,22 +388,16 @@ export default function SeatMapBuilder() {
                   <Plus className="h-3 w-3 mr-2" />
                   Agregar platea
                 </Button>
-                <Button 
-                  onClick={() => addPlatea(3)} 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
-                >
-                  <Plus className="h-3 w-3 mr-2" />
-                  Agregar 3 plateas
-                </Button>
               </div>
-            </div>
+            </Accordion>
 
             {/* Platea Selection */}
-            {totalPlateas > 0 && (
-              <div className="border border-gray-200 rounded-2xl p-4">
-                <h2 className="text-sm font-semibold text-gray-800 mb-3">Seleccionar Platea</h2>
+            <Accordion 
+              title="Seleccionar Platea" 
+              defaultOpen={true}
+              disabled={totalPlateas === 0}
+            >
+              {totalPlateas > 0 && (
                 <div className="space-y-2">
                   {plateas.map((platea) => (
                     <Button
@@ -276,13 +420,16 @@ export default function SeatMapBuilder() {
                     </Button>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </Accordion>
 
             {/* Row Management */}
-            {selectedPlatea && (
-              <div className="border border-gray-200 rounded-2xl p-4">
-                <h2 className="text-sm font-semibold text-gray-800 mb-3">Filas</h2>
+            <Accordion 
+              title="Filas" 
+              defaultOpen={true}
+              disabled={!selectedPlatea}
+            >
+              {selectedPlatea && (
                 <div className="space-y-2">
                   <Button 
                     onClick={() => addRowToSelectedPlatea(1)} 
@@ -304,13 +451,26 @@ export default function SeatMapBuilder() {
                     <Plus className="h-3 w-3 mr-2" />
                     Agregar 5 filas
                   </Button>
+                  <Button
+                    onClick={deleteSelectedRows}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm disabled:opacity-50"
+                    disabled={selectedRows.length === 0}
+                  >
+                    <Trash2 className="h-3 w-3 mr-2" />
+                    Borrar filas seleccionadas
+                  </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </Accordion>
 
             {/* Seat Management */}
-            <div className="border border-gray-200 rounded-2xl p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Asientos</h2>
+            <Accordion 
+              title="Asientos" 
+              defaultOpen={true}
+              disabled={selectedRows.length === 0}
+            >
               <div className="space-y-2">
                 <Button
                   onClick={() => addSeatsToSelectedRows(1)}
@@ -343,82 +503,20 @@ export default function SeatMapBuilder() {
                   Agregar 10 asientos
                 </Button>
                 <Button
-                  onClick={deleteSelectedRows}
-                  variant="destructive"
+                  onClick={deleteSelectedSeats}
+                  variant="outline"
                   size="sm"
-                  className="w-full justify-start bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm disabled:opacity-50"
-                  disabled={selectedRows.length === 0}
+                  className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedSeats === 0}
                 >
                   <Trash2 className="h-3 w-3 mr-2" />
-                  Borrar filas seleccionadas
+                  Borrar asientos seleccionados
                 </Button>
               </div>
-            </div>
+            </Accordion>
 
-            {/* Map Name */}
-            <div className="border border-gray-200 rounded-2xl p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Nombre del mapa</h2>
-              <Input
-                placeholder="Ingresa el nombre del mapa"
-                value={mapName}
-                onChange={(e) => setMapName(e.target.value)}
-                className="bg-gray-50 border-gray-200 text-gray-700 placeholder:text-gray-400 rounded-xl text-sm"
-              />
-            </div>
 
-            {/* Selected Seats Actions */}
-            {selectedSeats > 0 && (
-              <div className="border border-gray-200 rounded-2xl p-4">
-                <h2 className="text-sm font-semibold text-gray-800 mb-3">
-                  Asientos Seleccionados ({selectedSeats})
-                </h2>
-                <div className="space-y-2">
-                  <Button 
-                    onClick={() => markSelectedSeatsAs("available")} 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full justify-start border-green-300 text-green-700 hover:bg-green-50 rounded-xl text-sm"
-                  >
-                    <div className="w-3 h-3 rounded-full bg-gray-200 mr-2"></div>
-                    Marcar como Libres
-                  </Button>
-                  <Button 
-                    onClick={() => markSelectedSeatsAs("occupied")} 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50 rounded-xl text-sm"
-                  >
-                    <div className="w-3 h-3 rounded-full bg-blue-900 mr-2"></div>
-                    Marcar como Ocupados
-                  </Button>
-                </div>
-              </div>
-            )}
 
-            {/* Statistics */}
-            <div className="border border-gray-200 rounded-2xl p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Estadísticas</h2>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Plateas:</span>
-                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
-                    {totalPlateas}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Filas:</span>
-                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
-                    {totalRows}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Asientos:</span>
-                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
-                    {totalSeats}
-                  </span>
-                </div>
-              </div>
-            </div>
             </div>
           )}
         </div>
@@ -446,10 +544,17 @@ export default function SeatMapBuilder() {
               onPlateaChange={setPlateas}
               selectedRows={selectedRows}
               onRowSelectionChange={setSelectedRows}
+              selectedPlateas={selectedPlateas}
+              onPlateaSelectionChange={setSelectedPlateas}
+              selectedSeats={selectedSeats}
+              onMarkSelectedSeatsAs={markSelectedSeatsAs}
+              onAddRowToPlatea={(plateaId) => {
+                addRowToSpecificPlatea(plateaId, 1)
+              }}
             />
           </div>
 
-          {/* Legend */}
+          {/* Legend and Statistics */}
           <div className="border-t border-gray-200 bg-white p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
@@ -470,8 +575,13 @@ export default function SeatMapBuilder() {
                   <span className="text-gray-700 text-sm">Sin etiqueta</span>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
-                <span className="font-medium">Controles:</span> Arrastra: mover • Click izq: seleccionar • Click der: ocupar/liberar
+              <div className="flex items-center gap-4">
+                <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
+                  <span className="font-medium">Controles:</span> Arrastra: mover • Click izq: seleccionar • Click der: ocupar/liberar
+                </div>
+                <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
+                  <span className="font-medium">Estadísticas:</span> {totalPlateas} plateas • {totalRows} filas • {totalSeats} asientos
+                </div>
               </div>
             </div>
           </div>

@@ -2,17 +2,23 @@
 
 import type React from "react"
 import { useState, useRef, useCallback } from "react"
-import type { Platea } from "../lib/schema"
+import type { Platea, Row, Seat as SeatType } from "../lib/schema"
 import { Seat } from "./Seat"
+import { FloatingSeatsPanel } from "./FloatingSeatsPanel"
 
 interface SeatCanvasProps {
   plateas: Platea[]
   onPlateaChange: (plateas: Platea[]) => void
   selectedRows: string[]
   onRowSelectionChange: (rowIds: string[]) => void
+  selectedPlateas: string[]
+  onPlateaSelectionChange: (plateaIds: string[]) => void
+  onAddRowToPlatea?: (plateaId: string) => void
+  selectedSeats?: number
+  onMarkSelectedSeatsAs?: (status: "available" | "occupied") => void
 }
 
-export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelectionChange }: SeatCanvasProps) {
+export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelectionChange, selectedPlateas, onPlateaSelectionChange, onAddRowToPlatea, selectedSeats = 0, onMarkSelectedSeatsAs }: SeatCanvasProps) {
   const [dragState, setDragState] = useState<{
     isDragging: boolean
     seatId: string | null
@@ -214,6 +220,13 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onClick={(e) => {
+        // Deseleccionar todo si se hace clic en el canvas vacío
+        if (e.target === e.currentTarget) {
+          onRowSelectionChange([])
+          onPlateaSelectionChange([])
+        }
+      }}
     >
       {plateas.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -234,11 +247,36 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
           {plateas.map((platea, plateaIndex) => (
             <div key={platea.id} className="mb-12">
               {/* Platea Header */}
-              <div className="mb-6 p-4 bg-white border border-gray-200 rounded-2xl shadow-md">
+              <div 
+                className={`mb-6 p-4 bg-white border rounded-2xl shadow-md cursor-pointer transition-all duration-200 ${
+                  selectedPlateas.includes(platea.id)
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300 hover:shadow-lg"
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const newSelectedPlateas = selectedPlateas.includes(platea.id)
+                    ? selectedPlateas.filter(id => id !== platea.id)
+                    : [...selectedPlateas, platea.id]
+                  
+                  onPlateaSelectionChange(newSelectedPlateas)
+                  
+                  // Auto-seleccionar la platea en el sidebar si no hay ninguna seleccionada
+                  if (newSelectedPlateas.includes(platea.id) && !selectedPlateas.includes(platea.id)) {
+                    // Emitir evento para seleccionar en sidebar
+                    const event = new CustomEvent('selectPlateaInSidebar', { detail: { plateaId: platea.id } })
+                    window.dispatchEvent(event)
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h2 className="text-lg font-semibold text-gray-800">{platea.label}</h2>
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedPlateas.includes(platea.id) ? "bg-blue-600" : "bg-blue-500"
+                    }`}></div>
+                    <h2 className={`text-lg font-semibold ${
+                      selectedPlateas.includes(platea.id) ? "text-blue-800" : "text-gray-800"
+                    }`}>{platea.label}</h2>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span className="bg-gray-100 px-2 py-1 rounded-lg">
@@ -253,7 +291,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
 
               {/* Rows within Platea */}
               {platea.rows.map((row, rowIndex) => (
-                <div key={row.id} className="flex items-center gap-4 mb-8" style={{ height: '60px' }}>
+                <div key={row.id} className="flex items-center gap-4 mb-4" style={{ height: '50px' }}>
                   {/* Row Header - Fixed width */}
                   <div className="flex-shrink-0" style={{ width: '180px' }}>
                     <div
@@ -282,7 +320,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                   </div>
 
                   {/* Seats Container - Posicionamiento absoluto para drag & drop */}
-                  <div className="flex-1 relative" style={{ height: '50px', minWidth: '800px' }}>
+                  <div className="flex-1 relative" style={{ height: '40px', minWidth: '800px' }}>
                     {row.seats.map((seat) => (
                       <div
                         key={seat.id}
@@ -309,6 +347,21 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                   </div>
                 </div>
               ))}
+              
+              {/* Add Row Button */}
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex-shrink-0" style={{ width: '180px' }}>
+                  <button
+                    onClick={() => onAddRowToPlatea?.(platea.id)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Agregar fila
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -325,6 +378,26 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
       </div>
+
+      {/* Floating Seats Panel */}
+      <FloatingSeatsPanel
+        selectedSeats={selectedSeats}
+        onMarkAsAvailable={() => onMarkSelectedSeatsAs?.("available")}
+        onMarkAsOccupied={() => onMarkSelectedSeatsAs?.("occupied")}
+        onClose={() => {
+          // Deseleccionar todos los asientos
+          const updatedPlateas = plateas.map((platea: Platea) => ({
+            ...platea,
+            rows: platea.rows.map((row: Row) => ({
+              ...row,
+              seats: row.seats.map((seat: SeatType) => 
+                seat.status === 'selected' ? { ...seat, status: 'available' as const } : seat
+              )
+            }))
+          }))
+          onPlateaChange(updatedPlateas)
+        }}
+      />
     </div>
   )
 }
