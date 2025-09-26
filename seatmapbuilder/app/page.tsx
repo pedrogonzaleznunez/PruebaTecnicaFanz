@@ -1,206 +1,507 @@
-"use client";
-import SeatMap from "../components/SeatMap";
-import { useSeatMap } from "../hooks/useSeatMap";
+"use client"
 
-export default function Page() {
-  const {
-    map,
-    selection,
-    reset,
-    setName,
-    addRows,
-    addSeatsToRow,
-    setRowLabels,
-    setSeatLabels,
-    deleteRows,
-    deleteSeats,
-    selectRows,
-    selectSeats,
-    exportJson,
-    importJson,
-  } = useSeatMap();
+import { useState } from "react"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Plus, Trash2, Grid3X3, ChevronLeft, ChevronRight, Menu } from "lucide-react"
+import { SeatCanvas } from "../components/SeatCanvas"
+import { JsonManager } from "../components/JsonManager"
+import type { Platea, Row, Seat } from "../lib/schema"
+import { generatePlateaId, generateFilaId, generateSeatId, extractPlateaNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
+import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
+
+export default function SeatMapBuilder() {
+  const [plateas, setPlateas] = useState<Platea[]>([])
+  const [selectedPlatea, setSelectedPlatea] = useState<string | null>(null)
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const [mapName, setMapName] = useState("")
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    console.log('Toggle sidebar clicked, current state:', sidebarCollapsed)
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
+
+  // Confirmation dialogs
+  const [confirmations, setConfirmations] = useState({
+    deleteRows: false,
+    clearMap: false
+  })
+  const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null)
+
+  const addPlatea = (count = 1) => {
+    const newPlateas: Platea[] = []
+    for (let i = 0; i < count; i++) {
+      const plateaNumber = plateas.length + i + 1
+      const newPlatea: Platea = {
+        id: generatePlateaId(plateaNumber),
+        label: `Platea ${plateaNumber}`,
+        rows: [],
+        selected: false,
+      }
+      newPlateas.push(newPlatea)
+    }
+    setPlateas([...plateas, ...newPlateas])
+  }
+
+  const addRowToSelectedPlatea = (count = 1) => {
+    if (!selectedPlatea) return
+
+    setPlateas(plateas.map(platea => {
+      if (platea.id === selectedPlatea) {
+        const plateaNumber = extractPlateaNumber(platea.id)
+        const newRows: Row[] = []
+        for (let i = 0; i < count; i++) {
+          const rowNumber = platea.rows.length + i + 1
+          const newRow: Row = {
+            id: generateFilaId(plateaNumber, rowNumber),
+            label: `Fila ${rowNumber}`,
+            seats: [],
+            selected: false,
+          }
+          newRows.push(newRow)
+        }
+        return { ...platea, rows: [...platea.rows, ...newRows] }
+      }
+      return platea
+    }))
+  }
+
+  const deleteSelectedRows = () => {
+    if (selectedRows.length === 0) return
+    setPendingAction({ type: 'deleteRows', data: { count: selectedRows.length } })
+    setConfirmations(prev => ({ ...prev, deleteRows: true }))
+  }
+
+  const performDeleteRows = () => {
+    setPlateas(plateas.map(platea => ({
+      ...platea,
+      rows: platea.rows.filter(row => !selectedRows.includes(row.id))
+    })))
+    setSelectedRows([])
+  }
+
+  const addSeatsToSelectedRows = (seatCount: number) => {
+    if (selectedRows.length === 0) return
+
+    setPlateas(plateas.map(platea => {
+      const plateaNumber = extractPlateaNumber(platea.id)
+      return {
+        ...platea,
+        rows: platea.rows.map(row => {
+          if (selectedRows.includes(row.id)) {
+            const rowNumber = extractFilaNumberFromFilaId(row.id)
+            const newSeats: Seat[] = []
+            for (let i = 0; i < seatCount; i++) {
+              const seatNumber = row.seats.length + i + 1
+              // Generar etiqueta en formato A1, A2, B1, B2, etc.
+              const letter = String.fromCharCode(65 + Math.floor((row.seats.length + i) / 10))
+              const number = ((row.seats.length + i) % 10) + 1
+              newSeats.push({
+                id: generateSeatId(plateaNumber, rowNumber, seatNumber),
+                label: `${letter}${number}`,
+                status: "available",
+                x: (row.seats.length + i) * 45 + 20,
+                y: 10,
+              })
+            }
+            return { ...row, seats: [...row.seats, ...newSeats] }
+          }
+          return row
+        })
+      }
+    }))
+  }
+
+  const clearMap = () => {
+    if (plateas.length > 0) {
+      setConfirmations(prev => ({ ...prev, clearMap: true }))
+    } else {
+      performClearMap()
+    }
+  }
+
+  const performClearMap = () => {
+    setPlateas([])
+    setSelectedPlatea(null)
+    setSelectedRows([])
+    setMapName("")
+  }
+
+  // Confirmation handlers
+  const handleConfirmation = (type: string) => {
+    switch (type) {
+      case 'deleteRows':
+        performDeleteRows()
+        break
+      case 'clearMap':
+        performClearMap()
+        break
+    }
+    setPendingAction(null)
+  }
+
+  const closeConfirmation = (key: keyof typeof confirmations) => {
+    setConfirmations(prev => ({ ...prev, [key]: false }))
+    setPendingAction(null)
+  }
+
+  // Calcular estadísticas
+  const totalPlateas = plateas.length
+  const totalRows = plateas.reduce((sum, platea) => sum + platea.rows.length, 0)
+  const totalSeats = plateas.reduce((sum, platea) => 
+    sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0)
+  const availableSeats = plateas.reduce((sum, platea) => 
+    sum + platea.rows.reduce((rowSum, row) => 
+      rowSum + row.seats.filter(s => s.status === "available").length, 0), 0)
+  const occupiedSeats = plateas.reduce((sum, platea) => 
+    sum + platea.rows.reduce((rowSum, row) => 
+      rowSum + row.seats.filter(s => s.status === "occupied").length, 0), 0)
+  const selectedSeats = plateas.reduce((sum, platea) => 
+    sum + platea.rows.reduce((rowSum, row) => 
+      rowSum + row.seats.filter(s => s.status === "selected").length, 0), 0)
+
+  const markSelectedSeatsAs = (status: "available" | "occupied") => {
+    setPlateas(plateas.map(platea => ({
+      ...platea,
+      rows: platea.rows.map(row => ({
+        ...row,
+        seats: row.seats.map(seat => 
+          seat.status === "selected" ? { ...seat, status } : seat
+        ),
+      }))
+    })))
+  }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">SeatMapBuilder (Fanz)</h1>
-        <div className="flex items-center gap-2">
-          <button className="rounded bg-neutral-200 px-3 py-1 text-sm" onClick={() => reset()}>Nuevo mapa</button>
-          <button
-            className="rounded bg-neutral-200 px-3 py-1 text-sm"
-            onClick={() => {
-              // Validar etiquetado obligatorio antes de exportar
-              const unlabeledRows = map.rows.filter(row => !row.label || row.label.trim() === '');
-              const unlabeledSeats = map.rows.reduce((acc, row) => 
-                acc + row.seats.filter(seat => !seat.label || seat.label.trim() === '').length, 0);
-              
-              if (unlabeledRows.length > 0 || unlabeledSeats > 0) {
-                const proceed = confirm(
-                  `⚠️ Hay ${unlabeledRows.length} fila(s) y ${unlabeledSeats} asiento(s) sin etiqueta.\n\n` +
-                  '¿Deseas exportar de todas formas?'
-                );
-                if (!proceed) return;
-              }
-              
-              const name = prompt("Nombre del mapa:", map.name || "Mapa");
-              if (!name) return;
-              try {
-                const json = exportJson(name);
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${name}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-              } catch (e) {
-                alert('Error al exportar: ' + (e as Error).message);
-              }
-            }}
-          >
-            Exportar JSON
-          </button>
-          <label className="cursor-pointer rounded bg-neutral-200 px-3 py-1 text-sm">
-            Importar JSON
-            <input
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                try {
-                  const text = await file.text();
-                  importJson(text);
-                } catch (err) {
-                  alert('JSON inválido');
-                } finally {
-                  e.currentTarget.value = '';
-                }
+    <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                console.log('Button clicked!')
+                toggleSidebar()
               }}
+              className="p-2 border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors"
+              title={sidebarCollapsed ? "Mostrar panel lateral" : "Ocultar panel lateral"}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+            <div className="p-2 rounded-xl bg-blue-500">
+              <Grid3X3 className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-800">SeatMapBuilder</h1>
+              <p className="text-xs text-gray-500">Editor de mapas de asientos</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={clearMap}
+              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-sm"
+            >
+              Nuevo mapa
+            </Button>
+            <JsonManager
+              plateas={plateas}
+              onPlateaChange={setPlateas}
+              mapName={mapName}
+              onMapNameChange={setMapName}
+              onClearMap={clearMap}
             />
-          </label>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded border border-neutral-200 p-3">
-          <h2 className="mb-2 font-medium">Acciones</h2>
-          <div className="flex flex-wrap gap-2">
-            <button className="rounded bg-blue-600 px-3 py-1 text-sm text-white" onClick={() => addRows(1, { prefix: 'Platea', start: map.rows.length + 1 })}>Agregar fila</button>
-            <button className="rounded bg-blue-600 px-3 py-1 text-sm text-white" onClick={() => addRows(5, { prefix: 'Platea', start: map.rows.length + 1 })}>Agregar 5 filas</button>
-            <button
-              className="rounded bg-emerald-600 px-3 py-1 text-sm text-white"
-              onClick={() => {
-                const targetRows = Array.from(selection.selectedRowIds);
-                if (targetRows.length === 0) return alert('Selecciona al menos una fila');
-                targetRows.forEach((rowId) => addSeatsToRow(rowId, 10, { prefix: 'A', start: 1 }));
-              }}
-            >
-              Agregar 10 asientos a filas seleccionadas
-            </button>
-            <button
-              className="rounded bg-red-600 px-3 py-1 text-sm text-white"
-              onClick={() => {
-                const rowIds = Array.from(selection.selectedRowIds);
-                if (rowIds.length === 0) return;
-                if (confirm(`Borrar ${rowIds.length} fila(s)?`)) deleteRows(rowIds);
-              }}
-            >
-              Borrar filas seleccionadas
-            </button>
+      <div className="flex h-[calc(100vh-81px)]">
+        {/* Left Sidebar - Actions */}
+        <div 
+          className={`border-r border-gray-200 bg-white transition-all duration-300 ease-in-out ${
+            sidebarCollapsed ? 'w-0 p-0 overflow-hidden' : 'w-72 p-4 overflow-y-auto'
+          }`}
+        >
+          {!sidebarCollapsed && (
+            <div className="space-y-4">
+            {/* Platea Management */}
+            <div className="border border-gray-200 rounded-2xl p-4">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Plateas</h2>
+              <div className="space-y-2">
+                <Button 
+                  onClick={() => addPlatea(1)} 
+                  size="sm"
+                  className="w-full justify-start bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm"
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Agregar platea
+                </Button>
+                <Button 
+                  onClick={() => addPlatea(3)} 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Agregar 3 plateas
+                </Button>
+              </div>
+            </div>
+
+            {/* Platea Selection */}
+            {totalPlateas > 0 && (
+              <div className="border border-gray-200 rounded-2xl p-4">
+                <h2 className="text-sm font-semibold text-gray-800 mb-3">Seleccionar Platea</h2>
+                <div className="space-y-2">
+                  {plateas.map((platea) => (
+                    <Button
+                      key={platea.id}
+                      variant={selectedPlatea === platea.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedPlatea(platea.id)}
+                      className={`w-full justify-start rounded-xl text-sm ${
+                        selectedPlatea === platea.id 
+                          ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between w-full">
+                        <span>{platea.label}</span>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+                          {platea.rows.length} filas
+                        </span>
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Row Management */}
+            {selectedPlatea && (
+              <div className="border border-gray-200 rounded-2xl p-4">
+                <h2 className="text-sm font-semibold text-gray-800 mb-3">Filas</h2>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => addRowToSelectedPlatea(1)} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+                  >
+                    <Plus className="h-3 w-3 mr-2" />
+                    <span className="truncate">
+                      Agregar fila
+                    </span>
+                  </Button>
+                  <Button 
+                    onClick={() => addRowToSelectedPlatea(5)} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+                  >
+                    <Plus className="h-3 w-3 mr-2" />
+                    Agregar 5 filas
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Seat Management */}
+            <div className="border border-gray-200 rounded-2xl p-4">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Asientos</h2>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => addSeatsToSelectedRows(1)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedRows.length === 0}
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Agregar 1 asiento
+                </Button>
+                <Button
+                  onClick={() => addSeatsToSelectedRows(5)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedRows.length === 0}
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Agregar 5 asientos
+                </Button>
+                <Button
+                  onClick={() => addSeatsToSelectedRows(10)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedRows.length === 0}
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Agregar 10 asientos
+                </Button>
+                <Button
+                  onClick={deleteSelectedRows}
+                  variant="destructive"
+                  size="sm"
+                  className="w-full justify-start bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedRows.length === 0}
+                >
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Borrar filas seleccionadas
+                </Button>
+              </div>
+            </div>
+
+            {/* Map Name */}
+            <div className="border border-gray-200 rounded-2xl p-4">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Nombre del mapa</h2>
+              <Input
+                placeholder="Ingresa el nombre del mapa"
+                value={mapName}
+                onChange={(e) => setMapName(e.target.value)}
+                className="bg-gray-50 border-gray-200 text-gray-700 placeholder:text-gray-400 rounded-xl text-sm"
+              />
+            </div>
+
+            {/* Selected Seats Actions */}
+            {selectedSeats > 0 && (
+              <div className="border border-gray-200 rounded-2xl p-4">
+                <h2 className="text-sm font-semibold text-gray-800 mb-3">
+                  Asientos Seleccionados ({selectedSeats})
+                </h2>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => markSelectedSeatsAs("available")} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start border-green-300 text-green-700 hover:bg-green-50 rounded-xl text-sm"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-gray-200 mr-2"></div>
+                    Marcar como Libres
+                  </Button>
+                  <Button 
+                    onClick={() => markSelectedSeatsAs("occupied")} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50 rounded-xl text-sm"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-blue-900 mr-2"></div>
+                    Marcar como Ocupados
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Statistics */}
+            <div className="border border-gray-200 rounded-2xl p-4">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Estadísticas</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Plateas:</span>
+                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
+                    {totalPlateas}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Filas:</span>
+                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
+                    {totalRows}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Asientos:</span>
+                  <span className="font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-lg text-xs">
+                    {totalSeats}
+                  </span>
+                </div>
+              </div>
+            </div>
+            </div>
+          )}
+        </div>
+
+        {/* Main Canvas Area */}
+        <div className="flex-1 flex flex-col relative" style={{ backgroundColor: '#F9FAFB' }}>
+          {/* Floating sidebar toggle button when collapsed
+          {sidebarCollapsed && (
+            // <button
+            //   onClick={() => {
+            //     console.log('Floating button clicked!')
+            //     toggleSidebar()
+            //   }}
+            //   className="absolute top-4 left-4 z-10 bg-blue-500 hover:bg-blue-600 text-white rounded-xl shadow-lg p-3 transition-colors"
+            //   title="Mostrar panel lateral"
+            // >
+            //   <Menu className="h-4 w-4" />
+            // </button>
+          )} */}
+          
+          {/* Canvas */}
+          <div className="flex-1 p-8">
+            <SeatCanvas
+              plateas={plateas}
+              onPlateaChange={setPlateas}
+              selectedRows={selectedRows}
+              onRowSelectionChange={setSelectedRows}
+            />
           </div>
 
-          <div className="mt-3">
-            <h3 className="text-sm font-medium">Etiquetado rápido</h3>
-            <div className="mt-2 flex flex-wrap items-end gap-2">
-              <button
-                className="rounded bg-neutral-200 px-3 py-1 text-sm"
-                onClick={() => {
-                  const rowIds = Array.from(selection.selectedRowIds);
-                  if (rowIds.length === 0) return alert('Selecciona filas');
-                  const prefix = prompt('Prefijo de filas:', 'Platea') || 'Platea';
-                  const start = Number(prompt('Inicio:', '1') || '1');
-                  const labels = rowIds.map((_, i) => `${prefix} ${start + i}`);
-                  setRowLabels(rowIds, labels);
-                }}
-              >
-                Etiquetar filas (prefijo + 1..N)
-              </button>
-              <button
-                className="rounded bg-neutral-200 px-3 py-1 text-sm"
-                onClick={() => {
-                  const rowIds = Array.from(selection.selectedRowIds);
-                  if (rowIds.length === 0) return alert('Selecciona filas');
-                  const prefix = prompt('Prefijo de asientos:', 'A') || 'A';
-                  const start = Number(prompt('Inicio:', '1') || '1');
-                  const count = Number(prompt('Cantidad de asientos por fila:', '10') || '10');
-                  
-                  rowIds.forEach(rowId => {
-                    const labels = Array.from({ length: count }, (_, i) => `${prefix}${start + i}`);
-                    const seatIds = map.rows.find(r => r.id === rowId)?.seats.slice(0, count).map(s => s.id) || [];
-                    if (seatIds.length > 0) {
-                      setSeatLabels(rowId, seatIds, labels);
-                    }
-                  });
-                }}
-              >
-                Etiquetar asientos (prefijo + 1..N)
-              </button>
+          {/* Legend */}
+          <div className="border-t border-gray-200 bg-white p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gray-200"></div>
+                  <span className="text-gray-700 text-sm">Libre ({availableSeats})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-900"></div>
+                  <span className="text-gray-700 text-sm">Ocupado ({occupiedSeats})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-600"></div>
+                  <span className="text-gray-700 text-sm">Seleccionado ({selectedSeats})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-red-300"></div>
+                  <span className="text-gray-700 text-sm">Sin etiqueta</span>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
+                <span className="font-medium">Controles:</span> Arrastra: mover • Click izq: seleccionar • Click der: ocupar/liberar
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="rounded border border-neutral-200 p-3">
-          <h2 className="mb-2 font-medium">Estado</h2>
-          <div className="text-sm text-neutral-700 space-y-1">
-            <div>{map.rows.length} fila(s)</div>
-            <div>{map.rows.reduce((acc, row) => acc + row.seats.length, 0)} asiento(s)</div>
-            {(() => {
-              const unlabeledRows = map.rows.filter(row => !row.label || row.label.trim() === '');
-              const unlabeledSeats = map.rows.reduce((acc, row) => 
-                acc + row.seats.filter(seat => !seat.label || seat.label.trim() === '').length, 0);
-              
-              if (unlabeledRows.length > 0 || unlabeledSeats > 0) {
-                return (
-                  <div className="text-amber-600 text-xs">
-                    ⚠️ {unlabeledRows.length} fila(s) sin etiqueta, {unlabeledSeats} asiento(s) sin etiqueta
-                  </div>
-                );
-              }
-              return <div className="text-green-600 text-xs">✅ Todas las filas y asientos etiquetados</div>;
-            })()}
-          </div>
-        </div>
       </div>
 
-      <SeatMap
-        rows={map.rows}
-        selectedRowIds={selection.selectedRowIds}
-        selectedSeatIdsByRow={selection.selectedSeatIdsByRow}
-        onToggleRow={(rowId, additive) => {
-          const already = selection.selectedRowIds.has(rowId);
-          const next = new Set(additive ? selection.selectedRowIds : new Set<string>());
-          if (already) next.delete(rowId); else next.add(rowId);
-          // use hook api for consistency
-          const ids = Array.from(next);
-          // emulate selectRows semantics
-          // first clear then add ids
-          // since we don't expose direct setter, call selectRows
-          // in two steps: not ideal but sufficient for MVP batch action
-          selectRows([], false);
-          if (ids.length) selectRows(ids, true);
-        }}
-        onToggleSeat={(rowId, seatId, additive) => {
-          const current = new Set(additive ? (selection.selectedSeatIdsByRow.get(rowId) ?? new Set<string>()) : new Set<string>());
-          if (current.has(seatId)) current.delete(seatId); else current.add(seatId);
-          selectSeats(rowId, Array.from(current), false);
-        }}
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        open={confirmations.deleteRows}
+        onClose={() => closeConfirmation('deleteRows')}
+        onConfirm={() => handleConfirmation('deleteRows')}
+        title="Confirmar eliminación"
+        message={`¿Estás seguro de que quieres borrar ${pendingAction?.data?.count || 0} fila(s)?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        details={["Esta acción no se puede deshacer", "Todos los asientos de estas filas también se eliminarán"]}
       />
 
-      {/* Preview externo deshabilitado para MVP sin dependencias */}
-    </main>
-  );
+      <ConfirmationDialog
+        open={confirmations.clearMap}
+        onClose={() => closeConfirmation('clearMap')}
+        onConfirm={() => handleConfirmation('clearMap')}
+        title="Nuevo mapa"
+        message="¿Estás seguro de que quieres crear un nuevo mapa?"
+        confirmText="Crear nuevo"
+        cancelText="Cancelar"
+        variant="warning"
+        details={["Se perderán todos los cambios no guardados", "Esta acción no se puede deshacer"]}
+      />
+    </div>
+  )
 }
-
-

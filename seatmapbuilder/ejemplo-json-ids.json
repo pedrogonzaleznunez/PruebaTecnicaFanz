@@ -1,0 +1,71 @@
+{
+  "name": "Teatro Principal",
+  "plateas": [
+    {
+      "id": "platea-p1",
+      "label": "Platea 1",
+      "rows": [
+        {
+          "id": "fila-p1f1",
+          "label": "Fila 1",
+          "seats": [
+            {
+              "id": "seat-p1f1n1",
+              "label": "A1",
+              "status": "available",
+              "x": 20,
+              "y": 10
+            },
+            {
+              "id": "seat-p1f1n2", 
+              "label": "A2",
+              "status": "occupied",
+              "x": 65,
+              "y": 10
+            }
+          ]
+        },
+        {
+          "id": "fila-p1f2",
+          "label": "Fila 2", 
+          "seats": [
+            {
+              "id": "seat-p1f2n1",
+              "label": "A1",
+              "status": "available",
+              "x": 20,
+              "y": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platea-p5",
+      "label": "Platea 5",
+      "rows": [
+        {
+          "id": "fila-p5f15",
+          "label": "Fila 15",
+          "seats": [
+            {
+              "id": "seat-p5f15n32",
+              "label": "D2",
+              "status": "available",
+              "x": 20,
+              "y": 10
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "createdAt": "2025-01-27T19:00:00.000Z",
+  "version": "1.0",
+  "metadata": {
+    "totalPlateas": 2,
+    "totalRows": 3,
+    "totalSeats": 4,
+    "exportedBy": "SeatMapBuilder (Fanz)"
+  }
+}

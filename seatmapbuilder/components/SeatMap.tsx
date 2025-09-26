@@ -79,13 +79,8 @@ export default function SeatMap({ rows, selectedRowIds, selectedSeatIdsByRow, on
                       ${(!seat.label || seat.label.trim() === '') ? 'ring-1 ring-amber-400' : ''}
                     `}
                     onClick={(e) => {
-                      if (e.doubleClick) {
-                        // Doble click para cambiar estado ocupado/libre
-                        toggleSeatOccupied(seat.id);
-                      } else {
-                        // Click simple para seleccionar
-                        onToggleSeat(row.id, seat.id, e.shiftKey || e.metaKey);
-                      }
+                      // Click simple para seleccionar
+                      onToggleSeat(row.id, seat.id, e.shiftKey || e.metaKey);
                     }}
                     onDoubleClick={(e) => {
                       e.preventDefault();

@@ -1,12 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  --bg: 249 250 251;
-  --fg: 23 23 23;
-}
-
 html, body {
   height: 100%;
+}
+
+:root {
+  --background: 248 250 252; /* #F8FAFC - slate-50 */
+  --foreground: 30 41 59; /* #1E293B - slate-800 */
+  --card: 255 255 255; /* #FFFFFF - white */
+  --card-foreground: 51 65 85; /* #334155 - slate-700 */
+  --popover: 255 255 255; /* #FFFFFF - white */
+  --popover-foreground: 51 65 85; /* #334155 - slate-700 */
+  --primary: 59 130 246; /* #3B82F6 - blue-500 */
+  --primary-foreground: 248 250 252; /* #F8FAFC - slate-50 */
+  --secondary: 241 245 249; /* #F1F5F9 - slate-100 */
+  --secondary-foreground: 30 41 59; /* #1E293B - slate-800 */
+  --muted: 241 245 249; /* #F1F5F9 - slate-100 */
+  --muted-foreground: 100 116 139; /* #64748B - slate-500 */
+  --accent: 226 232 240; /* #E2E8F0 - slate-200 */
+  --accent-foreground: 30 41 59; /* #1E293B - slate-800 */
+  --destructive: 239 68 68; /* #EF4444 - red-500 */
+  --destructive-foreground: 248 250 252; /* #F8FAFC - slate-50 */
+  --border: 226 232 240; /* #E2E8F0 - slate-200 */
+  --input: 241 245 249; /* #F1F5F9 - slate-100 */
+  --ring: 59 130 246; /* #3B82F6 - blue-500 */
+  --radius: 1rem; /* rounded-2xl default */
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: #F9FAFB;
+  color: hsl(var(--foreground));
+}
+
+html {
+  background-color: #F9FAFB;
+}
+
+/* Asegurar que toda la aplicación tenga el fondo correcto */
+#__next, 
+[data-nextjs-scroll-focus-boundary] {
+  background-color: #F9FAFB !important;
+}
+
+/* Fondo para cualquier contenedor root */
+.min-h-screen {
+  background-color: #F9FAFB !important;
 }
 
 

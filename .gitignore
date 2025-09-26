@@ -1,3 +1,5 @@
 seatmapbuilder/.env.local
 .env.local
 seatmapbuilder/node_modules
+.DS_Store
+seatmapbuilder/.next
