@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+:root {
+  --bg: 249 250 251;
+  --fg: 23 23 23;
+}
+
+html, body {
+  height: 100%;
+}
+
+
