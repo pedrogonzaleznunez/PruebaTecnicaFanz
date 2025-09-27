@@ -72,13 +72,20 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
 
   const totalSeats = section.rows.reduce((sum, row) => sum + row.seats.length, 0)
 
+  const availableSeats = section.rows.reduce((sum, row) => 
+    sum + row.seats.filter(seat => seat.status === 'available').length, 0
+  )
+  const occupiedSeats = section.rows.reduce((sum, row) => 
+    sum + row.seats.filter(seat => seat.status === 'occupied').length, 0
+  )
+
   return (
     <div
       ref={blockRef}
       className={`absolute cursor-move select-none transition-all duration-200 ${
         isSelected 
-          ? 'ring-2 ring-blue-600 ring-offset-2' 
-          : 'hover:shadow-lg'
+          ? 'ring-2 ring-blue-500 ring-offset-1' 
+          : 'hover:shadow-md'
       }`}
       style={{
         left: section.x,
@@ -90,43 +97,81 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
       }}
       onMouseDown={handleMouseDown}
     >
-      {/* Bloque principal */}
+      {/* Bloque principal limpio */}
       <div className={`w-full h-full rounded-lg border transition-all duration-200 shadow-sm ${
         isSelected 
-          ? 'bg-white border-blue-600 shadow-lg' 
-          : 'bg-white border-gray-300 hover:border-gray-400 hover:shadow-md'
+          ? 'bg-white border-blue-500 shadow-md' 
+          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
       }`}>
-        {/* Header con nombre */}
-        <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-          <h3 className="font-medium text-sm text-gray-900 truncate">
-            {section.label}
-          </h3>
-        </div>
         
-        {/* Contenido con estadísticas */}
-        <div className="p-3 flex-1 flex flex-col justify-center">
-          <div className="text-center space-y-1">
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full"></div>
-              <span className="text-xs text-gray-600">
-                {section.rows.length} filas
-              </span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-              <span className="text-xs text-gray-600">
-                {totalSeats} asientos
-              </span>
-            </div>
+        {/* Header simple y limpio */}
+        <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-gray-900 truncate">
+              {section.label}
+            </h3>
+            {isSelected && (
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            )}
           </div>
         </div>
         
-        {/* Indicador de selección */}
-        {isSelected && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
+        {/* Contenido principal */}
+        <div className="p-3 flex-1">
+          {/* Estadísticas compactas */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="text-center">
+              <div className="text-lg font-bold text-gray-900">{section.rows.length}</div>
+              <div className="text-xs text-gray-500">filas</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-gray-900">{totalSeats}</div>
+              <div className="text-xs text-gray-500">asientos</div>
+            </div>
           </div>
-        )}
+          
+          {/* Vista previa de asientos simplificada */}
+          {section.rows.length > 0 && (
+            <div className="space-y-1">
+              {section.rows.slice(0, 3).map((row, index) => (
+                <div key={row.id} className="flex justify-center gap-0.5">
+                  {row.seats.slice(0, 6).map((seat, seatIndex) => (
+                    <div
+                      key={seat.id}
+                      className={`w-1.5 h-1.5 rounded-sm ${
+                        seat.status === 'available' 
+                          ? 'bg-green-500' 
+                          : seat.status === 'occupied' 
+                          ? 'bg-red-500' 
+                          : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                  {row.seats.length > 6 && (
+                    <span className="text-xs text-gray-400 ml-1">+{row.seats.length - 6}</span>
+                  )}
+                </div>
+              ))}
+              {section.rows.length > 3 && (
+                <div className="text-xs text-gray-400 text-center">
+                  +{section.rows.length - 3} filas más
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Estado de asientos */}
+          <div className="flex justify-center gap-3 mt-3 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-gray-600">{availableSeats}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span className="text-gray-600">{occupiedSeats}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

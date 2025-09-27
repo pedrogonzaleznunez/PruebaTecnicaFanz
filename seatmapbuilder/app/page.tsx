@@ -19,6 +19,19 @@ export default function SeatMapBuilder() {
   const [mapName, setMapName] = useState("")
   const [canvasCollapsed, setCanvasCollapsed] = useState(false)
 
+  // Listen for canvas toggle events from SectionEditor
+  useEffect(() => {
+    const handleToggleCanvas = () => {
+      setCanvasCollapsed(!canvasCollapsed)
+    }
+
+    window.addEventListener('toggleCanvas', handleToggleCanvas)
+    
+    return () => {
+      window.removeEventListener('toggleCanvas', handleToggleCanvas)
+    }
+  }, [canvasCollapsed])
+
   // Confirmation dialogs
   const [confirmations, setConfirmations] = useState({
     deleteSections: false,
@@ -78,15 +91,16 @@ export default function SeatMapBuilder() {
     const row = section.rows.find(r => r.id === rowId)
     if (!row) return
 
+    const rowNumber = extractFilaNumberFromFilaId(rowId)
     const newSeats: Seat[] = []
     for (let i = 1; i <= count; i++) {
       const seatNumber = row.seats.length + i
-      const seatId = generateSeatId(extractSectionNumber(sectionId), extractFilaNumberFromFilaId(rowId), seatNumber)
+      const seatId = generateSeatId(extractSectionNumber(sectionId), rowNumber, seatNumber)
       newSeats.push({
         id: seatId,
         x: (row.seats.length + i - 1) * 30,
         y: 0,
-        label: `${row.label.slice(-1)}${seatNumber}`,
+        label: `${String.fromCharCode(64 + rowNumber)}${seatNumber}`,
         status: "available" as const,
         meta: {},
       })
@@ -124,13 +138,34 @@ export default function SeatMapBuilder() {
     const newSections: Section[] = []
     for (let i = 0; i < count; i++) {
       const sectionNumber = sections.length + i + 1
+      // Calculate position to avoid overlap with stadium-like layout
+      const colsPerRow = 3 // Maximum sections per row for stadium feel
+      const sectionWidth = 220
+      const sectionHeight = 180
+      const spacing = 30
+      
+      const col = (sections.length + i) % colsPerRow
+      const row = Math.floor((sections.length + i) / colsPerRow)
+      
+      // Stadium-like positioning: sections closer to stage are larger
+      const distanceFromStage = row
+      const sizeMultiplier = Math.max(0.8, 1 - (distanceFromStage * 0.1))
+      const adjustedWidth = sectionWidth * sizeMultiplier
+      const adjustedHeight = sectionHeight * sizeMultiplier
+      
+      // Center sections and add some curve
+      const centerX = 400 // Center of canvas
+      const sectionSpacing = adjustedWidth + spacing
+      const totalWidth = (colsPerRow - 1) * sectionSpacing
+      const startX = centerX - totalWidth / 2
+      
       const newSection: Section = {
         id: generateSectionId(sectionNumber),
         label: `Sección ${sectionNumber}`,
-        x: 50 + (i * 250), // Posición por defecto con offset
-        y: 50,
-        width: 200,
-        height: 150,
+        x: startX + col * sectionSpacing,
+        y: 100 + row * (adjustedHeight + spacing),
+        width: adjustedWidth,
+        height: adjustedHeight,
         rows: [],
         selected: false,
       }
@@ -319,40 +354,18 @@ export default function SeatMapBuilder() {
           canvasCollapsed ? 'w-0 overflow-hidden' : 'flex-1'
         }`}>
           {!canvasCollapsed && (
-            <>
-              {/* Canvas toggle button - top right of canvas */}
-              <button
-                onClick={() => setCanvasCollapsed(!canvasCollapsed)}
-                className="absolute top-4 right-4 z-20 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg p-2 transition-colors"
-                title="Ocultar canvas"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              
-              <SectionCanvas
-                sections={sections}
-                selectedSectionId={selectedSection}
-                onSectionSelect={setSelectedSection}
-                onSectionUpdate={updateSection}
-              />
-            </>
+            <SectionCanvas
+              sections={sections}
+              selectedSectionId={selectedSection}
+              onSectionSelect={setSelectedSection}
+              onSectionUpdate={updateSection}
+            />
           )}
         </div>
 
-        {/* Canvas toggle button - when collapsed */}
-        {canvasCollapsed && (
-          <button
-            onClick={() => setCanvasCollapsed(false)}
-            className="absolute top-4 left-4 z-20 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg p-2 transition-colors"
-            title="Mostrar canvas"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
-
         {/* Right panel - Section editor */}
         <div className={`border-l border-gray-200 bg-white transition-all duration-300 ease-in-out ${
-          canvasCollapsed ? 'flex-1' : 'w-[500px]'
+          canvasCollapsed ? 'flex-1' : 'w-[600px]'
         }`}>
           <SectionEditor
             section={sections.find(s => s.id === selectedSection) || null}
