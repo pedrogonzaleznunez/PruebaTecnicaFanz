@@ -12,7 +12,7 @@ interface SeatProps {
   status: SeatStatus
   x: number
   y: number
-  onSelect?: () => void
+  onSelect?: (event?: React.MouseEvent) => void
   onStatusChange?: () => void
   isDragging?: boolean
   className?: string
@@ -80,8 +80,7 @@ export function Seat({
   return (
     <div className="relative">
       <motion.div
-        style={{ left: x, top: y }}
-        className={`absolute w-11 h-11 ${className}`}
+        className={`w-11 h-11 ${className}`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         animate={isDragging ? { scale: 1.15, zIndex: 50 } : { scale: 1, zIndex: 10 }}
@@ -96,7 +95,7 @@ export function Seat({
           `}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={onSelect}
+          onClick={(e) => onSelect?.(e)}
           onContextMenu={(e) => {
             e.preventDefault()
             onStatusChange?.()
@@ -106,7 +105,7 @@ export function Seat({
             <Check className="w-5 h-5" strokeWidth={3} />
           ) : (
             <span className="text-xs font-bold select-none">
-              {label.length > 2 ? label.slice(-2) : label}
+              {label}
             </span>
           )}
         </div>

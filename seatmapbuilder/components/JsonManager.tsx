@@ -321,19 +321,19 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
       {/* Export Modal */}
       {exportDialogOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
           onClick={() => setExportDialogOpen(false)}
         >
           <div 
-            className="bg-background border border-border rounded-lg p-6 w-full max-w-md shadow-lg"
+            className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4" />
-              <h2 className="text-lg font-semibold">Exportar Mapa de Asientos</h2>
+              <FileText className="h-4 w-4 text-blue-500" />
+              <h2 className="text-lg font-semibold text-blue-500">Exportar Mapa de Asientos</h2>
               <button
                 onClick={() => setExportDialogOpen(false)}
-                className="ml-auto p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="ml-auto p-1 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -341,29 +341,30 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="export-name">Nombre del mapa</Label>
+                <Label htmlFor="export-name" className="text-black">Nombre del mapa</Label>
                 <Input
                   id="export-name"
                   value={mapName}
                   onChange={(e) => onMapNameChange(e.target.value)}
                   placeholder="Ingresa el nombre del mapa"
+                  className="text-black placeholder:text-gray-500"
                 />
               </div>
 
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <h4 className="text-sm font-medium mb-2">Resumen del mapa:</h4>
-                <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="text-sm font-medium mb-2 text-black">Resumen del mapa:</h4>
+                <div className="space-y-1 text-sm text-black">
                   <div className="flex justify-between">
                     <span>Plateas:</span>
-                    <Badge variant="secondary">{totalPlateas}</Badge>
+                    <Badge variant="secondary" className="bg-gray-200 text-black">{totalPlateas}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Filas:</span>
-                    <Badge variant="secondary">{totalRows}</Badge>
+                    <Badge variant="secondary" className="bg-gray-200 text-black">{totalRows}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Asientos:</span>
-                    <Badge variant="secondary">{totalSeats}</Badge>
+                    <Badge variant="secondary" className="bg-gray-200 text-black">{totalSeats}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Fecha:</span>
@@ -373,11 +374,11 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={exportToFile} className="flex-1" disabled={!mapName.trim()}>
+                <Button onClick={exportToFile} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white" disabled={!mapName.trim()}>
                   <Download className="h-4 w-4 mr-2" />
                   Descargar Archivo
                 </Button>
-                <Button variant="outline" onClick={copyToClipboard}>
+                <Button variant="outline" onClick={copyToClipboard} className="border-gray-300 text-black hover:bg-gray-100">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -399,19 +400,19 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
       {/* Import Modal */}
       {importDialogOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
           onClick={() => setImportDialogOpen(false)}
         >
           <div 
-            className="bg-background border border-border rounded-lg p-6 w-full max-w-2xl shadow-lg"
+            className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-2xl shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Upload className="h-4 w-4" />
-              <h2 className="text-lg font-semibold">Importar Mapa de Asientos</h2>
+              <Upload className="h-4 w-4 text-blue-500" />
+              <h2 className="text-lg font-semibold text-blue-500">Importar Mapa de Asientos</h2>
               <button
                 onClick={() => setImportDialogOpen(false)}
-                className="ml-auto p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="ml-auto p-1 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -419,13 +420,13 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="import-text">Pegar JSON o cargar desde archivo</Label>
+                <Label htmlFor="import-text" className="text-black">Pegar JSON o cargar desde archivo</Label>
                 <Textarea
                   id="import-text"
                   value={importText}
                   onChange={(e) => setImportText(e.target.value)}
                   placeholder="Pega aquí el contenido JSON del mapa..."
-                  className="min-h-[200px] font-mono text-sm"
+                  className="min-h-[200px] font-mono text-sm text-black placeholder:text-gray-500"
                 />
               </div>
 
@@ -483,10 +484,10 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
               )}
 
               <div className="flex gap-2">
-                <Button onClick={handleTextImport} disabled={!importText.trim() || isValidating} className="flex-1">
+                <Button onClick={handleTextImport} disabled={!importText.trim() || isValidating} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white">
                   {isValidating ? "Validando..." : "Validar e Importar"}
                 </Button>
-                <Button variant="outline" onClick={() => setImportText("")}>
+                <Button variant="outline" onClick={() => setImportText("")} className="border-gray-300 text-black hover:bg-gray-100">
                   Limpiar
                 </Button>
               </div>

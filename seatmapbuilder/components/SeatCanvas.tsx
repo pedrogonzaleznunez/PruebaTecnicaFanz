@@ -163,53 +163,178 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
   )
 
   const handleSeatClick = useCallback(
-    (plateaId: string, rowId: string, seatId: string) => {
+    (plateaId: string, rowId: string, seatId: string, event?: React.MouseEvent) => {
       if (dragState.isDragging) return // No hacer click si está arrastrando
       
       // Verificar que fue un click rápido (menos de 200ms)
       const clickDuration = Date.now() - mouseDownTimeRef.current
       if (clickDuration > 200) return
       
-      onPlateaChange(
-        plateas.map((platea) => {
-          if (platea.id === plateaId) {
-            return {
-              ...platea,
-              rows: platea.rows.map((row) => {
-                if (row.id === rowId) {
-                  return {
-                    ...row,
-                    seats: row.seats.map((seat) => {
-                      if (seat.id === seatId) {
-                        return {
-                          ...seat,
-                          status: seat.status === "selected" ? "available" : "selected",
-                        }
+      const isCmdClick = event?.metaKey || event?.ctrlKey
+      
+      if (isCmdClick) {
+        // Selección de rango con Cmd+Click
+        const platea = plateas.find(p => p.id === plateaId)
+        const row = platea?.rows.find(r => r.id === rowId)
+        if (!row) return
+        
+        const clickedSeatIndex = row.seats.findIndex(s => s.id === seatId)
+        const selectedSeats = row.seats.filter(s => s.status === "selected")
+        
+        if (selectedSeats.length === 0) {
+          // Si no hay asientos seleccionados, seleccionar solo este
+          onPlateaChange(
+            plateas.map((platea) => {
+              if (platea.id === plateaId) {
+                return {
+                  ...platea,
+                  rows: platea.rows.map((row) => {
+                    if (row.id === rowId) {
+                      return {
+                        ...row,
+                        seats: row.seats.map((seat) => {
+                          if (seat.id === seatId) {
+                            return { ...seat, status: "selected" }
+                          }
+                          return seat
+                        }),
                       }
-                      return seat
-                    }),
-                  }
+                    }
+                    return row
+                  })
                 }
-                return row
-              })
+              }
+              return platea
+            }),
+          )
+        } else {
+          // Seleccionar rango desde el primer asiento seleccionado hasta el clickeado
+          const firstSelectedIndex = row.seats.findIndex(s => s.id === selectedSeats[0].id)
+          const startIndex = Math.min(firstSelectedIndex, clickedSeatIndex)
+          const endIndex = Math.max(firstSelectedIndex, clickedSeatIndex)
+          
+          onPlateaChange(
+            plateas.map((platea) => {
+              if (platea.id === plateaId) {
+                return {
+                  ...platea,
+                  rows: platea.rows.map((row) => {
+                    if (row.id === rowId) {
+                      return {
+                        ...row,
+                        seats: row.seats.map((seat, index) => {
+                          if (index >= startIndex && index <= endIndex) {
+                            return { ...seat, status: "selected" }
+                          }
+                          return seat
+                        }),
+                      }
+                    }
+                    return row
+                  })
+                }
+              }
+              return platea
+            }),
+          )
+        }
+      } else {
+        // Click normal - toggle individual con selección jerárquica
+        const platea = plateas.find(p => p.id === plateaId)
+        const row = platea?.rows.find(r => r.id === rowId)
+        const seat = row?.seats.find(s => s.id === seatId)
+        
+        if (!seat) return
+        
+        const newSeatStatus = seat.status === "selected" ? "available" : "selected"
+        
+        onPlateaChange(
+          plateas.map((platea) => {
+            if (platea.id === plateaId) {
+              return {
+                ...platea,
+                rows: platea.rows.map((row) => {
+                  if (row.id === rowId) {
+                    return {
+                      ...row,
+                      seats: row.seats.map((seat) => {
+                        if (seat.id === seatId) {
+                          return { ...seat, status: newSeatStatus }
+                        }
+                        return seat
+                      }),
+                    }
+                  }
+                  return row
+                })
+              }
             }
+            return platea
+          }),
+        )
+        
+        // Selección jerárquica: si se selecciona un asiento, seleccionar también su fila y platea
+        if (newSeatStatus === "selected") {
+          // Seleccionar la fila si no está seleccionada
+          if (!selectedRows.includes(rowId)) {
+            onRowSelectionChange([...selectedRows, rowId])
           }
-          return platea
-        }),
-      )
+          
+          // Seleccionar la platea si no está seleccionada
+          if (!selectedPlateas.includes(plateaId)) {
+            onPlateaSelectionChange([...selectedPlateas, plateaId])
+          }
+        }
+      }
     },
-    [plateas, onPlateaChange, dragState.isDragging],
+    [plateas, onPlateaChange, dragState.isDragging, selectedRows, onRowSelectionChange, selectedPlateas, onPlateaSelectionChange],
   )
 
   const toggleRowSelection = useCallback(
     (rowId: string, e: React.MouseEvent) => {
       e.stopPropagation()
-      const newSelection = selectedRows.includes(rowId)
-        ? selectedRows.filter((id) => id !== rowId)
-        : [...selectedRows, rowId]
-      onRowSelectionChange(newSelection)
+      
+      const isCmdClick = e.metaKey || e.ctrlKey
+      
+      if (isCmdClick) {
+        // Selección de rango con Cmd+Click para filas
+        const platea = plateas.find(p => p.rows.some(r => r.id === rowId))
+        if (!platea) return
+        
+        const clickedRowIndex = platea.rows.findIndex(r => r.id === rowId)
+        
+        if (selectedRows.length === 0) {
+          // Si no hay filas seleccionadas, seleccionar solo esta
+          onRowSelectionChange([rowId])
+        } else {
+          // Encontrar la primera fila seleccionada en la misma platea
+          const firstSelectedRowId = selectedRows.find(id => 
+            platea.rows.some(r => r.id === id)
+          )
+          if (!firstSelectedRowId) {
+            onRowSelectionChange([rowId])
+            return
+          }
+          
+          const firstSelectedIndex = platea.rows.findIndex(r => r.id === firstSelectedRowId)
+          const startIndex = Math.min(firstSelectedIndex, clickedRowIndex)
+          const endIndex = Math.max(firstSelectedIndex, clickedRowIndex)
+          
+          const rangeRowIds = platea.rows
+            .slice(startIndex, endIndex + 1)
+            .map(r => r.id)
+          
+          onRowSelectionChange(rangeRowIds)
+        }
+      } else {
+        // Click normal - toggle individual
+        const newSelection = selectedRows.includes(rowId)
+          ? selectedRows.filter((id) => id !== rowId)
+          : [...selectedRows, rowId]
+        onRowSelectionChange(newSelection)
+      }
     },
-    [selectedRows, onRowSelectionChange],
+    [selectedRows, onRowSelectionChange, plateas],
   )
 
   return (
@@ -319,24 +444,25 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                     </div>
                   </div>
 
-                  {/* Seats Container - Posicionamiento absoluto para drag & drop */}
-                  <div className="flex-1 relative" style={{ height: '40px', minWidth: '800px' }}>
-                    {row.seats.map((seat) => (
+                  {/* Seats Container - Flexbox para alineación uniforme */}
+                  <div className="flex-1 flex items-center justify-start gap-2" style={{ height: '40px', minWidth: '800px' }}>
+                    {row.seats.map((seat, seatIndex) => (
                       <div
                         key={seat.id}
                         onMouseDown={(e) => {
                           e.stopPropagation()
                           handleSeatMouseDown(e, platea.id, row.id, seat.id)
                         }}
+                        className="relative"
                       >
                         <Seat
                           id={seat.id}
                           label={seat.label}
                           status={seat.status}
-                          x={seat.x}
-                          y={seat.y}
+                          x={0}
+                          y={0}
                           isDragging={dragState.seatId === seat.id && dragState.isDragging}
-                          onSelect={() => handleSeatClick(platea.id, row.id, seat.id)}
+                          onSelect={(event) => handleSeatClick(platea.id, row.id, seat.id, event)}
                           onStatusChange={() => {
                             const mockEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
                             handleSeatRightClick(mockEvent as any, platea.id, row.id, seat.id);

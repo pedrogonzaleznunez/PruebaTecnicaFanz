@@ -90,6 +90,7 @@ export default function SeatMapBuilder() {
   // Confirmation dialogs
   const [confirmations, setConfirmations] = useState({
     deleteRows: false,
+    deleteSeats: false,
     clearMap: false
   })
   const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null)
@@ -177,7 +178,11 @@ export default function SeatMapBuilder() {
 
   const deleteSelectedSeats = () => {
     if (selectedSeats === 0) return
-    
+    setPendingAction({ type: 'deleteSeats', data: { count: selectedSeats } })
+    setConfirmations(prev => ({ ...prev, deleteSeats: true }))
+  }
+
+  const performDeleteSeats = () => {
     setPlateas(plateas.map(platea => ({
       ...platea,
       rows: platea.rows.map(row => ({
@@ -216,12 +221,14 @@ export default function SeatMapBuilder() {
             const newSeats: Seat[] = []
             for (let i = 0; i < seatCount; i++) {
               const seatNumber = row.seats.length + i + 1
-              // Generar etiqueta en formato A1, A2, B1, B2, etc.
-              const letter = String.fromCharCode(65 + Math.floor((row.seats.length + i) / 10))
-              const number = ((row.seats.length + i) % 10) + 1
+              // Generar etiqueta en formato A1, A2, ..., A10, B1, B2, ..., B10, etc.
+              const seatIndexInRow = row.seats.length + i
+              const letterIndex = Math.floor(seatIndexInRow / 10)
+              const numberInGroup = (seatIndexInRow % 10) + 1
+              const letter = String.fromCharCode(65 + letterIndex) // A, B, C, etc.
               newSeats.push({
                 id: generateSeatId(plateaNumber, rowNumber, seatNumber),
-                label: `${letter}${number}`,
+                label: `${letter}${numberInGroup}`,
                 status: "available",
                 x: (row.seats.length + i) * 45 + 20,
                 y: 10,
@@ -255,6 +262,9 @@ export default function SeatMapBuilder() {
     switch (type) {
       case 'deleteRows':
         performDeleteRows()
+        break
+      case 'deleteSeats':
+        performDeleteSeats()
         break
       case 'clearMap':
         performClearMap()
@@ -295,7 +305,7 @@ export default function SeatMapBuilder() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
+      <header className="border-b border-gray-200" style={{ backgroundColor: '#E8F4FB' }}>
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <button
@@ -455,11 +465,13 @@ export default function SeatMapBuilder() {
                     onClick={deleteSelectedRows}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm disabled:opacity-50"
+                    className="w-full justify-start border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-xl text-sm disabled:opacity-50"
                     disabled={selectedRows.length === 0}
+                    style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+
                   >
-                    <Trash2 className="h-3 w-3 mr-2" />
-                    Borrar filas seleccionadas
+                    <Trash2 className="h-3 w-3 mr-2" style={{ color: '#dc2626' }} />
+                    Borrar filas selec.
                   </Button>
                 </div>
               )}
@@ -506,11 +518,12 @@ export default function SeatMapBuilder() {
                   onClick={deleteSelectedSeats}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm disabled:opacity-50"
+                  className="w-full justify-start border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-xl text-sm disabled:opacity-50"
                   disabled={selectedSeats === 0}
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
                 >
-                  <Trash2 className="h-3 w-3 mr-2" />
-                  Borrar asientos seleccionados
+                  <Trash2 className="h-3 w-3 mr-2" style={{ color: '#dc2626' }} />
+                  Borrar asientos selec.
                 </Button>
               </div>
             </Accordion>
@@ -599,6 +612,18 @@ export default function SeatMapBuilder() {
         cancelText="Cancelar"
         variant="danger"
         details={["Esta acción no se puede deshacer", "Todos los asientos de estas filas también se eliminarán"]}
+      />
+
+      <ConfirmationDialog
+        open={confirmations.deleteSeats}
+        onClose={() => closeConfirmation('deleteSeats')}
+        onConfirm={() => handleConfirmation('deleteSeats')}
+        title="Confirmar eliminación"
+        message={`¿Estás seguro de que quieres borrar ${pendingAction?.data?.count || 0} asiento(s)?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        details={["Esta acción no se puede deshacer", "Los asientos seleccionados se eliminarán permanentemente"]}
       />
 
       <ConfirmationDialog
