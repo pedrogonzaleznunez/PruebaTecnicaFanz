@@ -53,14 +53,7 @@ http://localhost:3000
 
 ``` bash
 # Desarrollo
-npm run dev          # Ejecuta el servidor de desarrollo
-
-# Producción
-npm run build        # Construye la aplicación para producción
-npm run start         # Ejecuta la aplicación en modo producción
-
-# Calidad de código
-npm run lint          # Ejecuta ESLint para verificar el código
+npm run dev          # Ejecuta el proyecto en modo desarrollo
 ```
 
 ## 🏗️ Estructura del Proyecto
@@ -112,6 +105,11 @@ npm run lint          # Ejecuta ESLint para verificar el código
 * **Guardar mapa**: Usar el botón "Guardar JSON" para descargar el archivo
 * **Cargar mapa**: Usar el botón "Cargar JSON" para importar un mapa existente
 * **Limpiar mapa**: Botón para resetear el mapa actual
+
+## 💻 Atajos utiles:
+
+* **Seleccionar varios asientos**: Seleccionar un asiento, mantener presionado CMD/Cntrl + click en otro asiento. Este comando seleccionará todos los asientos entre ambos clicks.
+* **Seleccionar varias filas**: Idem al comando anterior pero con las filas.
 
 ## 🔧 Tecnologías Utilizadas
 
