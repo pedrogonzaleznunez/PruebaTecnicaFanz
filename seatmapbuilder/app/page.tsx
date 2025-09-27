@@ -14,6 +14,7 @@ import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
 export default function SeatMapBuilder() {
   const [sections, setSections] = useState<Section[]>([])
   const [selectedSection, setSelectedSection] = useState<string | null>(null)
+  const [selectedSections, setSelectedSections] = useState<string[]>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [selectedSeats, setSelectedSeats] = useState(0)
   const [mapName, setMapName] = useState("")
@@ -32,9 +33,26 @@ export default function SeatMapBuilder() {
     }
   }, [canvasCollapsed])
 
+  // Listen for Escape key to deselect all
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedSections([])
+        setSelectedSection(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   // Confirmation dialogs
   const [confirmations, setConfirmations] = useState({
     deleteSections: false,
+    deleteRow: false,
     clearMap: false
   })
   const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null)
@@ -43,6 +61,36 @@ export default function SeatMapBuilder() {
     setSections(sections.map(section => 
       section.id === sectionId ? { ...section, ...updates } : section
     ))
+  }
+
+  const handleSectionSelect = (sectionId: string, event: React.MouseEvent) => {
+    // Si se hace click en el canvas vacío, deseleccionar todo
+    if (sectionId === '') {
+      setSelectedSections([])
+      setSelectedSection(null)
+      return
+    }
+
+    const isMultiSelect = event.metaKey || event.ctrlKey
+    
+    if (isMultiSelect) {
+      // Selección múltiple
+      if (selectedSections.includes(sectionId)) {
+        // Deseleccionar si ya está seleccionada
+        const newSelected = selectedSections.filter(id => id !== sectionId)
+        setSelectedSections(newSelected)
+        setSelectedSection(newSelected.length > 0 ? newSelected[0] : null)
+      } else {
+        // Agregar a la selección
+        const newSelected = [...selectedSections, sectionId]
+        setSelectedSections(newSelected)
+        setSelectedSection(sectionId)
+      }
+    } else {
+      // Selección única
+      setSelectedSections([sectionId])
+      setSelectedSection(sectionId)
+    }
   }
 
   const addRowToSection = (sectionId: string, seatCount = 10) => {
@@ -79,9 +127,23 @@ export default function SeatMapBuilder() {
     const section = sections.find(s => s.id === sectionId)
     if (!section) return
 
+    const row = section.rows.find(r => r.id === rowId)
+    if (!row) return
+
+    setPendingAction({ type: 'deleteRow', data: { sectionId, rowId, rowLabel: row.label } })
+    setConfirmations(prev => ({ ...prev, deleteRow: true }))
+  }
+
+  const performDeleteRow = () => {
+    if (pendingAction?.type === 'deleteRow' && pendingAction.data) {
+      const { sectionId, rowId } = pendingAction.data
+      const section = sections.find(s => s.id === sectionId)
+      if (section) {
     updateSection(sectionId, {
       rows: section.rows.filter(row => row.id !== rowId)
     })
+      }
+    }
   }
 
   const addSeatsToRow = (sectionId: string, rowId: string, count: number) => {
@@ -180,15 +242,16 @@ export default function SeatMapBuilder() {
   }
 
   const deleteSelectedSections = () => {
-    if (selectedSection) {
-      setPendingAction({ type: 'deleteSections', data: { count: 1 } })
+    if (selectedSections.length > 0) {
+      setPendingAction({ type: 'deleteSections', data: { count: selectedSections.length } })
       setConfirmations(prev => ({ ...prev, deleteSections: true }))
     }
   }
 
   const performDeleteSections = () => {
-    if (selectedSection) {
-      setSections(sections.filter(section => section.id !== selectedSection))
+    if (selectedSections.length > 0) {
+      setSections(sections.filter(section => !selectedSections.includes(section.id)))
+      setSelectedSections([])
       setSelectedSection(null)
     }
   }
@@ -204,6 +267,7 @@ export default function SeatMapBuilder() {
   const performClearMap = () => {
     setSections([])
     setSelectedSection(null)
+    setSelectedSections([])
     setSelectedRows([])
     setMapName("")
   }
@@ -213,6 +277,9 @@ export default function SeatMapBuilder() {
     switch (type) {
       case 'deleteSections':
         performDeleteSections()
+        break
+      case 'deleteRow':
+        performDeleteRow()
         break
       case 'clearMap':
         performClearMap()
@@ -244,109 +311,109 @@ export default function SeatMapBuilder() {
         <div className="flex items-center justify-between px-6 py-4">
           {/* Logo, title and map name */}
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-600">
-                <Grid3X3 className="h-5 w-5 text-white" />
-              </div>
-              <div>
+              <Grid3X3 className="h-5 w-5 text-white" />
+            </div>
+            <div>
                 <h1 className="text-xl font-semibold text-gray-900">SeatMapBuilder</h1>
                 <p className="text-sm text-gray-500">Editor de mapas de asientos</p>
               </div>
             </div>
             
             {/* Map name input */}
-            <div className="relative">
-              <Input
-                placeholder="Nombre del mapa"
-                value={mapName}
-                onChange={(e) => setMapName(e.target.value)}
-                className="bg-white border-gray-300 text-gray-700 placeholder:text-gray-400 rounded-lg text-sm w-48 pr-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              <div className="relative">
+                <Input
+                  placeholder="Nombre del mapa"
+                  value={mapName}
+                  onChange={(e) => setMapName(e.target.value)}
+                className="bg-white border-gray-300 text-gray-700 placeholder:text-gray-400 rounded-lg text-sm w-48 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
-              <button
-                onClick={() => {
-                  const newName = prompt('Nuevo nombre del mapa:', mapName)
-                  if (newName !== null) {
-                    setMapName(newName)
-                  }
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Editar nombre del mapa"
-              >
-                <Edit3 className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-3">
-            {/* Primary action - Add section */}
-            <Button 
-              onClick={() => addSection(1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar sección
-            </Button>
-
+              </div>
+            
             {/* Secondary actions */}
+            <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
               onClick={clearMap}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
+                className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-md transition-all duration-200"
             >
+                <Plus className="h-4 w-4 mr-2" />
               Nuevo mapa
             </Button>
-            
+              
             <JsonManager
-              plateas={sections}
-              onPlateaChange={setSections}
+                plateas={sections}
+                onPlateaChange={setSections}
               mapName={mapName}
               onMapNameChange={setMapName}
               onClearMap={clearMap}
             />
           </div>
         </div>
+        
+           {/* Primary actions - Add section and Delete sections */}
+          <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => addSection(1)}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar sección
+          </Button>
+            
+            {selectedSections.length > 0 && (
+                <Button
+                  onClick={deleteSelectedSections}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm px-4 py-2"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar {selectedSections.length > 1 ? 'secciones' : 'sección'}
+                </Button>
+          )}
+        </div>
+          </div>
       </header>
 
       {/* Statistics bar */}
       <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               <span className="text-sm text-gray-600">
                 <span className="font-medium text-gray-900">{totalSections}</span> secciones
               </span>
-            </div>
-            <div className="flex items-center gap-2">
+                </div>
+                <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
               <span className="text-sm text-gray-600">
                 <span className="font-medium text-gray-900">{totalRows}</span> filas
               </span>
-            </div>
-            <div className="flex items-center gap-2">
+                </div>
+                <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
               <span className="text-sm text-gray-600">
                 <span className="font-medium text-gray-900">{totalSeats}</span> asientos
               </span>
-            </div>
-          </div>
+                </div>
+              </div>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-sm text-gray-600">
                 <span className="font-medium text-green-600">{availableSeats}</span> libres
               </span>
-            </div>
+                </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
               <span className="text-sm text-gray-600">
                 <span className="font-medium text-red-600">{occupiedSeats}</span> ocupados
               </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
       <div className="flex h-[calc(100vh-140px)]">
         {/* Main canvas area */}
@@ -354,12 +421,13 @@ export default function SeatMapBuilder() {
           canvasCollapsed ? 'w-0 overflow-hidden' : 'flex-1'
         }`}>
           {!canvasCollapsed && (
-            <SectionCanvas
-              sections={sections}
-              selectedSectionId={selectedSection}
-              onSectionSelect={setSelectedSection}
-              onSectionUpdate={updateSection}
-            />
+          <SectionCanvas
+            sections={sections}
+            selectedSectionId={selectedSection}
+               selectedSections={selectedSections}
+               onSectionSelect={handleSectionSelect}
+            onSectionUpdate={updateSection}
+          />
           )}
         </div>
 
@@ -379,6 +447,7 @@ export default function SeatMapBuilder() {
             onMarkSelectedSeatsAs={markSelectedSeatsAs}
             onDeleteSection={deleteSelectedSections}
             hasSelectedSection={!!selectedSection}
+            canvasCollapsed={canvasCollapsed}
           />
         </div>
       </div>
@@ -389,11 +458,23 @@ export default function SeatMapBuilder() {
         onClose={() => closeConfirmation('deleteSections')}
         onConfirm={() => handleConfirmation('deleteSections')}
         title="Confirmar eliminación"
-        message={`¿Estás seguro de que quieres borrar la sección seleccionada?`}
+         message={`¿Estás seguro de que quieres borrar ${pendingAction?.data?.count || 1} sección${(pendingAction?.data?.count || 1) > 1 ? 'es' : ''} seleccionada${(pendingAction?.data?.count || 1) > 1 ? 's' : ''}?`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         variant="danger"
         details={["Esta acción no se puede deshacer", "Todas las filas y asientos de esta sección también se eliminarán"]}
+       />
+
+      <ConfirmationDialog
+        open={confirmations.deleteRow}
+        onClose={() => closeConfirmation('deleteRow')}
+        onConfirm={() => handleConfirmation('deleteRow')}
+        title="Confirmar eliminación de fila"
+        message={`¿Estás seguro de que quieres borrar la fila "${pendingAction?.data?.rowLabel || ''}"?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        details={["Esta acción no se puede deshacer", "Todos los asientos de esta fila también se eliminarán"]}
       />
 
       <ConfirmationDialog

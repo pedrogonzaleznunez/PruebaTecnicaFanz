@@ -312,7 +312,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
         variant="outline" 
         disabled={plateas.length === 0}
         onClick={() => setExportDialogOpen(true)}
-        className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Download className="h-4 w-4 mr-2" />
         Exportar JSON
@@ -391,7 +391,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
       <Button 
         variant="outline"
         onClick={() => setImportDialogOpen(true)}
-        className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
+        className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-md transition-all duration-200"
       >
         <Upload className="h-4 w-4 mr-2" />
         Importar JSON

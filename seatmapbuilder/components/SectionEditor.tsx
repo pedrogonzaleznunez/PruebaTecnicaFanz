@@ -21,6 +21,7 @@ interface SectionEditorProps {
   onMarkSelectedSeatsAs: (status: "available" | "occupied") => void
   onDeleteSection: () => void
   hasSelectedSection: boolean
+  canvasCollapsed: boolean
 }
 
 export function SectionEditor({ 
@@ -34,7 +35,8 @@ export function SectionEditor({
   selectedSeats,
   onMarkSelectedSeatsAs,
   onDeleteSection,
-  hasSelectedSection
+  hasSelectedSection,
+  canvasCollapsed
 }: SectionEditorProps) {
   const [newRowSeatCount, setNewRowSeatCount] = useState(10)
 
@@ -72,13 +74,13 @@ export function SectionEditor({
                 window.dispatchEvent(event)
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm p-2 transition-colors"
-              title="Ocultar canvas"
+              title={canvasCollapsed ? "Mostrar canvas" : "Ocultar canvas"}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className={`h-4 w-4 transition-transform ${canvasCollapsed ? 'rotate-180' : ''}`} />
             </button>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Editor de Sección</h2>
-              <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-600 mt-1">
                 Editando: <span className="font-medium text-gray-900">{section.label}</span>
               </p>
             </div>
@@ -104,39 +106,39 @@ export function SectionEditor({
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Propiedades básicas
             </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre de la sección
-                </label>
-                <Input
-                  value={section.label}
-                  onChange={(e) => onUpdate(section.id, { label: e.target.value })}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre de la sección
+            </label>
+            <Input
+              value={section.label}
+              onChange={(e) => onUpdate(section.id, { label: e.target.value })}
                   className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="Nombre de la sección"
-                />
-              </div>
+              placeholder="Nombre de la sección"
+            />
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                     Ancho (px)
-                  </label>
-                  <Input
-                    type="number"
-                    value={section.width}
-                    onChange={(e) => onUpdate(section.id, { width: parseInt(e.target.value) || 200 })}
+              </label>
+              <Input
+                type="number"
+                value={section.width}
+                onChange={(e) => onUpdate(section.id, { width: parseInt(e.target.value) || 200 })}
                     className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                     Alto (px)
-                  </label>
-                  <Input
-                    type="number"
-                    value={section.height}
-                    onChange={(e) => onUpdate(section.id, { height: parseInt(e.target.value) || 150 })}
+              </label>
+              <Input
+                type="number"
+                value={section.height}
+                onChange={(e) => onUpdate(section.id, { height: parseInt(e.target.value) || 150 })}
                     className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
@@ -184,61 +186,61 @@ export function SectionEditor({
       <div className="flex-1 p-4 bg-white overflow-y-auto">
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
               Gestión de Filas y Asientos
             </h3>
             
             {/* Add Row Controls */}
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700">Asientos por fila:</span>
-              <Input
-                type="number"
-                value={newRowSeatCount}
-                onChange={(e) => setNewRowSeatCount(parseInt(e.target.value) || 10)}
+            <Input
+              type="number"
+              value={newRowSeatCount}
+              onChange={(e) => setNewRowSeatCount(parseInt(e.target.value) || 10)}
                 className="w-20 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                min="1"
-                max="50"
-              />
-              <Button
-                onClick={() => onAddRow(section.id)}
+              min="1"
+              max="50"
+            />
+            <Button
+              onClick={() => onAddRow(section.id)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
-              >
+            >
                 <Plus className="h-4 w-4 mr-1" />
-                Agregar fila
-              </Button>
-            </div>
+              Agregar fila
+            </Button>
           </div>
+        </div>
 
           {/* Rows List with Seat Labels */}
-          {section.rows.length === 0 ? (
+        {section.rows.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
                 <Plus className="h-8 w-8 text-gray-400" />
               </div>
               <p className="text-base font-medium mb-2">No hay filas en esta sección</p>
               <p className="text-sm">Usa el botón de arriba para agregar la primera fila</p>
-            </div>
-          ) : (
+          </div>
+        ) : (
             <div className="space-y-4 flex-1 overflow-y-auto">
-              {section.rows.map((row, index) => (
+            {section.rows.map((row, index) => (
                 <div key={row.id} className="p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                   {/* Row Header */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                       <span className="text-base font-bold text-gray-900">
-                        {row.label}
-                      </span>
+                    {row.label}
+                  </span>
                       <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded border">
-                        {row.seats.length} asientos
-                      </span>
-                    </div>
-                    <Button
-                      onClick={() => onDeleteRow(section.id, row.id)}
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                    >
+                    {row.seats.length} asientos
+                  </span>
+                </div>
+                  <Button
+                    onClick={() => onDeleteRow(section.id, row.id)}
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -251,24 +253,76 @@ export function SectionEditor({
                         {row.seats.map((seat, seatIndex) => (
                           <button
                             key={seat.id}
-                            onClick={() => {
-                              // Toggle seat selection
-                              const updatedSection = {
-                                ...section,
-                                rows: section.rows.map(r => 
-                                  r.id === row.id 
-                                    ? {
-                                        ...r,
-                                        seats: r.seats.map(s => 
-                                          s.id === seat.id 
-                                            ? { ...s, status: s.status === 'selected' ? 'available' : 'selected' }
-                                            : s
-                                        )
-                                      }
-                                    : r
-                                )
+                            onClick={(e) => {
+                              const isMultiSelect = e.metaKey || e.ctrlKey
+                              
+                              if (isMultiSelect) {
+                                // Selección por rango
+                                const selectedSeats = row.seats.filter(s => s.status === 'selected')
+                                if (selectedSeats.length > 0) {
+                                  // Encontrar el primer asiento seleccionado
+                                  const firstSelectedIndex = row.seats.findIndex(s => s.status === 'selected')
+                                  const currentIndex = seatIndex
+                                  
+                                  // Determinar el rango
+                                  const startIndex = Math.min(firstSelectedIndex, currentIndex)
+                                  const endIndex = Math.max(firstSelectedIndex, currentIndex)
+                                  
+                                  // Seleccionar todos los asientos en el rango
+                                  const updatedSection = {
+                                    ...section,
+                                    rows: section.rows.map(r => 
+                                      r.id === row.id 
+                                        ? {
+                                            ...r,
+                                            seats: r.seats.map((s, index) => 
+                                              index >= startIndex && index <= endIndex
+                                                ? { ...s, status: 'selected' as const }
+                                                : s
+                                            )
+                                          }
+                                        : r
+                                    )
+                                  }
+                                  onUpdate(section.id, updatedSection)
+                                } else {
+                                  // Si no hay asientos seleccionados, seleccionar solo este
+                                  const updatedSection = {
+                                    ...section,
+                                    rows: section.rows.map(r => 
+                                      r.id === row.id 
+                                        ? {
+                                            ...r,
+                                            seats: r.seats.map(s => 
+                                              s.id === seat.id 
+                                                ? { ...s, status: 'selected' as const }
+                                                : s
+                                            )
+                                          }
+                                        : r
+                                    )
+                                  }
+                                  onUpdate(section.id, updatedSection)
+                                }
+                              } else {
+                                // Toggle seat selection normal
+                                const updatedSection = {
+                                  ...section,
+                                  rows: section.rows.map(r => 
+                                    r.id === row.id 
+                                      ? {
+                                          ...r,
+                                          seats: r.seats.map(s => 
+                                            s.id === seat.id 
+                                              ? { ...s, status: s.status === 'selected' ? 'available' as const : 'selected' as const }
+                                              : s
+                                          )
+                                        }
+                                      : r
+                                  )
+                                }
+                                onUpdate(section.id, updatedSection)
                               }
-                              onUpdate(section.id, updatedSection)
                             }}
                             className={`px-2 py-1 text-xs rounded cursor-pointer transition-colors ${
                               seat.status === 'available' 
@@ -303,7 +357,7 @@ export function SectionEditor({
                                   ? {
                                       ...r,
                                       seats: r.seats.map(s => 
-                                        s.status === 'selected' ? { ...s, status: 'occupied' } : s
+                                        s.status === 'selected' ? { ...s, status: 'occupied' as const } : s
                                       )
                                     }
                                   : r
@@ -325,7 +379,7 @@ export function SectionEditor({
                                   ? {
                                       ...r,
                                       seats: r.seats.map(s => 
-                                        s.status === 'selected' ? { ...s, status: 'available' } : s
+                                        s.status === 'selected' ? { ...s, status: 'available' as const } : s
                                       )
                                     }
                                   : r
@@ -367,14 +421,14 @@ export function SectionEditor({
                           className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
                         >
                           +10
-                        </Button>
+                  </Button>
                       </div>
                     </div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
         </div>
       </div>
     </div>

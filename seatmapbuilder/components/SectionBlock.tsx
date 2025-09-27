@@ -6,11 +6,12 @@ import type { Section } from "../lib/schema"
 interface SectionBlockProps {
   section: Section
   isSelected: boolean
-  onSelect: (sectionId: string) => void
+  isMultiSelected: boolean
+  onSelect: (sectionId: string, event: React.MouseEvent) => void
   onUpdate: (sectionId: string, updates: Partial<Section>) => void
 }
 
-export function SectionBlock({ section, isSelected, onSelect, onUpdate }: SectionBlockProps) {
+export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, onUpdate }: SectionBlockProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const blockRef = useRef<HTMLDivElement>(null)
@@ -19,7 +20,7 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
     e.stopPropagation()
     
     // Seleccionar la sección
-    onSelect(section.id)
+    onSelect(section.id, e)
     
     // Calcular offset para el drag
     const rect = blockRef.current?.getBoundingClientRect()
@@ -98,28 +99,28 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
       onMouseDown={handleMouseDown}
     >
       {/* Bloque principal limpio */}
-      <div className={`w-full h-full rounded-lg border transition-all duration-200 shadow-sm ${
-        isSelected 
-          ? 'bg-white border-blue-500 shadow-md' 
+      <div className={`w-full h-full rounded-lg border transition-all duration-200 shadow-sm flex flex-col ${
+        (isSelected || isMultiSelected)
+          ? 'bg-white border-blue-500 shadow-md ring-2 ring-blue-200' 
           : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
       }`}>
         
         {/* Header simple y limpio */}
-        <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+        <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg flex-shrink-0">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm text-gray-900 truncate">
               {section.label}
             </h3>
-            {isSelected && (
+            {(isSelected || isMultiSelected) && (
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             )}
           </div>
         </div>
         
         {/* Contenido principal */}
-        <div className="p-3 flex-1">
+        <div className="p-3 flex-1 flex flex-col min-h-0">
           {/* Estadísticas compactas */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="grid grid-cols-2 gap-2 mb-3 flex-shrink-0">
             <div className="text-center">
               <div className="text-lg font-bold text-gray-900">{section.rows.length}</div>
               <div className="text-xs text-gray-500">filas</div>
@@ -132,7 +133,7 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
           
           {/* Vista previa de asientos simplificada */}
           {section.rows.length > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
               {section.rows.slice(0, 3).map((row, index) => (
                 <div key={row.id} className="flex justify-center gap-0.5">
                   {row.seats.slice(0, 6).map((seat, seatIndex) => (
@@ -161,7 +162,7 @@ export function SectionBlock({ section, isSelected, onSelect, onUpdate }: Sectio
           )}
           
           {/* Estado de asientos */}
-          <div className="flex justify-center gap-3 mt-3 text-xs">
+          <div className="flex justify-center gap-3 mt-2 text-xs flex-shrink-0">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-gray-600">{availableSeats}</span>

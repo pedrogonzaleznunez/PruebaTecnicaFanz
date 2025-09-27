@@ -8,13 +8,15 @@ import { SectionBlock } from "./SectionBlock"
 interface SectionCanvasProps {
   sections: Section[]
   selectedSectionId: string | null
-  onSectionSelect: (sectionId: string) => void
+  selectedSections: string[]
+  onSectionSelect: (sectionId: string, event: React.MouseEvent) => void
   onSectionUpdate: (sectionId: string, updates: Partial<Section>) => void
 }
 
 export function SectionCanvas({ 
   sections, 
   selectedSectionId, 
+  selectedSections,
   onSectionSelect, 
   onSectionUpdate 
 }: SectionCanvasProps) {
@@ -22,7 +24,7 @@ export function SectionCanvas({
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Si se hace click en el canvas vacío, deseleccionar
     if (e.target === e.currentTarget) {
-      onSectionSelect('')
+      onSectionSelect('', e)
     }
   }, [onSectionSelect])
 
@@ -51,6 +53,7 @@ export function SectionCanvas({
             key={section.id}
             section={section}
             isSelected={selectedSectionId === section.id}
+            isMultiSelected={selectedSections.includes(section.id)}
             onSelect={onSectionSelect}
             onUpdate={onSectionUpdate}
           />
