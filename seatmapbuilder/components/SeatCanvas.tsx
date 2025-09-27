@@ -38,6 +38,21 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
     offsetX: 0,
     offsetY: 0
   })
+
+  // Box selection state
+  const [boxSelection, setBoxSelection] = useState<{
+    isActive: boolean
+    startX: number
+    startY: number
+    endX: number
+    endY: number
+  }>({
+    isActive: false,
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0
+  })
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const mouseDownTimeRef = useRef<number>(0)
@@ -126,6 +141,119 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       offsetY: 0
     })
   }, [])
+
+  // Box selection functions
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    console.log('Canvas mouse down:', e.target, e.currentTarget, e.target === e.currentTarget)
+    if (e.button !== 0) return // Only left click
+    
+    // Check if we clicked on the canvas itself or on empty space
+    const target = e.target as HTMLElement
+    if (target.closest('[data-seat-id]') || target.closest('.seat-container')) {
+      console.log('Clicked on seat, not starting box selection')
+      return
+    }
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const startX = e.clientX - rect.left
+    const startY = e.clientY - rect.top
+
+    console.log('Starting box selection at:', startX, startY)
+    setBoxSelection({
+      isActive: true,
+      startX,
+      startY,
+      endX: startX,
+      endY: startY
+    })
+  }, [])
+
+  const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!boxSelection.isActive || !canvasRef.current) return
+
+    const rect = canvasRef.current.getBoundingClientRect()
+    const endX = e.clientX - rect.left
+    const endY = e.clientY - rect.top
+
+    setBoxSelection(prev => ({
+      ...prev,
+      endX,
+      endY
+    }))
+  }, [boxSelection.isActive])
+
+  const handleCanvasMouseUp = useCallback(() => {
+    if (!boxSelection.isActive) return
+
+    console.log('Box selection ended, selecting seats...')
+    // Calculate which seats are within the selection rectangle
+    const selectedSeats: Array<{ plateaId: string; rowId: string; seatId: string }> = []
+    
+    // Get all seat elements
+    const seatElements = document.querySelectorAll('[data-seat-id]')
+    const canvasRect = canvasRef.current?.getBoundingClientRect()
+    
+    if (!canvasRect) return
+
+    console.log('Found', seatElements.length, 'seat elements')
+
+    seatElements.forEach(seatElement => {
+      const seatRect = seatElement.getBoundingClientRect()
+      const seatX = seatRect.left - canvasRect.left + seatRect.width / 2
+      const seatY = seatRect.top - canvasRect.top + seatRect.height / 2
+
+      const minX = Math.min(boxSelection.startX, boxSelection.endX)
+      const maxX = Math.max(boxSelection.startX, boxSelection.endX)
+      const minY = Math.min(boxSelection.startY, boxSelection.endY)
+      const maxY = Math.max(boxSelection.startY, boxSelection.endY)
+
+      if (seatX >= minX && seatX <= maxX && seatY >= minY && seatY <= maxY) {
+        const seatId = seatElement.getAttribute('data-seat-id')
+        if (seatId) {
+          console.log('Seat', seatId, 'is within selection rectangle')
+          // Find the seat in our data structure
+          plateas.forEach(platea => {
+            platea.rows.forEach(row => {
+              row.seats.forEach(seat => {
+                if (seat.id === seatId) {
+                  selectedSeats.push({ plateaId: platea.id, rowId: row.id, seatId: seat.id })
+                }
+              })
+            })
+          })
+        }
+      }
+    })
+
+    console.log('Selected seats:', selectedSeats.length)
+
+    // Update seat selection
+    if (selectedSeats.length > 0) {
+      onPlateaChange(
+        plateas.map(platea => ({
+          ...platea,
+          rows: platea.rows.map(row => ({
+            ...row,
+            seats: row.seats.map(seat => {
+              const isSelected = selectedSeats.some(s => s.seatId === seat.id)
+              return isSelected ? { ...seat, status: "selected" as const } : seat
+            })
+          }))
+        }))
+      )
+    }
+
+    // Reset box selection
+    setBoxSelection({
+      isActive: false,
+      startX: 0,
+      startY: 0,
+      endX: 0,
+      endY: 0
+    })
+  }, [boxSelection, plateas, onPlateaChange])
 
   const handleSeatRightClick = useCallback(
     (e: React.MouseEvent, plateaId: string, rowId: string, seatId: string) => {
@@ -342,9 +470,19 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       ref={canvasRef}
       className="relative w-full h-full min-h-[600px] bg-gray-50 rounded-2xl border border-gray-200 overflow-auto"
       style={{ backgroundColor: '#F9FAFB', userSelect: 'none' }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseDown={handleCanvasMouseDown}
+      onMouseMove={(e) => {
+        handleMouseMove(e)
+        handleCanvasMouseMove(e)
+      }}
+      onMouseUp={() => {
+        handleMouseUp()
+        handleCanvasMouseUp()
+      }}
+      onMouseLeave={() => {
+        handleMouseUp()
+        handleCanvasMouseUp()
+      }}
       onClick={(e) => {
         // Deseleccionar todo si se hace clic en el canvas vacío
         if (e.target === e.currentTarget) {
@@ -449,6 +587,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                     {row.seats.map((seat, seatIndex) => (
                       <div
                         key={seat.id}
+                        data-seat-id={seat.id}
                         onMouseDown={(e) => {
                           e.stopPropagation()
                           handleSeatMouseDown(e, platea.id, row.id, seat.id)
@@ -504,6 +643,20 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
       </div>
+
+      {/* Box Selection Rectangle */}
+      {boxSelection.isActive && (
+        <div
+          className="absolute border-2 border-blue-500 border-dashed pointer-events-none z-10"
+          style={{
+            left: Math.min(boxSelection.startX, boxSelection.endX),
+            top: Math.min(boxSelection.startY, boxSelection.endY),
+            width: Math.abs(boxSelection.endX - boxSelection.startX),
+            height: Math.abs(boxSelection.endY - boxSelection.startY),
+            backgroundColor: 'rgba(59, 130, 246, 0.05)', // Muy sutil azul con 5% opacidad
+          }}
+        />
+      )}
 
       {/* Floating Seats Panel */}
       <FloatingSeatsPanel

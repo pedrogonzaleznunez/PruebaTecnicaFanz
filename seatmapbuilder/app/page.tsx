@@ -10,6 +10,7 @@ import type { Platea, Row, Seat } from "../lib/schema"
 import { generatePlateaId, generateFilaId, generateSeatId, extractPlateaNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
 import { Accordion } from "../components/ui/accordion"
+import { LoadingScreen } from "../components/LoadingScreen"
 
 export default function SeatMapBuilder() {
   const [plateas, setPlateas] = useState<Platea[]>([])
@@ -18,6 +19,7 @@ export default function SeatMapBuilder() {
   const [selectedPlateas, setSelectedPlateas] = useState<string[]>([])
   const [mapName, setMapName] = useState("")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Toggle sidebar
   const toggleSidebar = () => {
@@ -34,6 +36,15 @@ export default function SeatMapBuilder() {
         : [...prev, plateaId]
     )
   }
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000) // 2 seconds loading
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Listen for platea selection from canvas
   useEffect(() => {
@@ -346,7 +357,7 @@ export default function SeatMapBuilder() {
                   <Edit3 className="h-3 w-3" />
                 </button>
               </div>
-              <Button
+              {/* <Button
                 onClick={saveMap}
                 variant="outline"
                 size="sm"
@@ -355,7 +366,7 @@ export default function SeatMapBuilder() {
               >
                 <Save className="h-4 w-4 mr-2" />
                 Guardar
-              </Button>
+              </Button> */}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -637,6 +648,9 @@ export default function SeatMapBuilder() {
         variant="warning"
         details={["Se perderán todos los cambios no guardados", "Esta acción no se puede deshacer"]}
       />
+
+      {/* Loading Screen */}
+      <LoadingScreen isLoading={isLoading} message="Cargando SeatMapBuilder..." />
     </div>
   )
 }
