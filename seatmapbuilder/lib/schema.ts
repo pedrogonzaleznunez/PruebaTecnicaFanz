@@ -19,6 +19,10 @@ export const rowSchema = z.object({
 export const plateaSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(1),
+  x: z.number().default(0),
+  y: z.number().default(0),
+  width: z.number().default(200),
+  height: z.number().default(150),
   rows: z.array(rowSchema),
   selected: z.boolean().optional(),
 });
@@ -39,6 +43,7 @@ export const seatMapSchema = z.object({
 export type Seat = z.infer<typeof seatSchema>;
 export type Row = z.infer<typeof rowSchema>;
 export type Platea = z.infer<typeof plateaSchema>;
+export type Section = Platea; // Alias for compatibility
 export type SeatMap = z.infer<typeof seatMapSchema>;
 
 

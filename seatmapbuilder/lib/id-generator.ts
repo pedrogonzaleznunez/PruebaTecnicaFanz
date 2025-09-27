@@ -56,3 +56,12 @@ export function extractFilaNumberFromFilaId(filaId: string): number {
   const match = filaId.match(/fila-p\d+f(\d+)/)
   return match ? parseInt(match[1]) : 0
 }
+
+// Section-based ID generators (aliases for compatibility)
+export function generateSectionId(sectionNumber: number): string {
+  return generatePlateaId(sectionNumber)
+}
+
+export function extractSectionNumber(sectionId: string): number {
+  return extractPlateaNumber(sectionId)
+}
