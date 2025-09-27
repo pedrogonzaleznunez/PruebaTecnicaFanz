@@ -6,17 +6,17 @@ import { Input } from "../components/ui/input"
 import { Plus, Trash2, Grid3X3, ChevronLeft, ChevronRight, Menu, Save, Edit3 } from "lucide-react"
 import { SeatCanvas } from "../components/SeatCanvas"
 import { JsonManager } from "../components/JsonManager"
-import type { Platea, Row, Seat } from "../lib/schema"
-import { generatePlateaId, generateFilaId, generateSeatId, extractPlateaNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
+import type { Section, Row, Seat } from "../lib/schema"
+import { generateSectionId, generateFilaId, generateSeatId, extractSectionNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
 import { Accordion } from "../components/ui/accordion"
 import { LoadingScreen } from "../components/LoadingScreen"
 
 export default function SeatMapBuilder() {
-  const [plateas, setPlateas] = useState<Platea[]>([])
-  const [selectedPlatea, setSelectedPlatea] = useState<string | null>(null)
+  const [sections, setSections] = useState<Section[]>([])
+  const [selectedSection, setSelectedSection] = useState<string | null>(null)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
-  const [selectedPlateas, setSelectedPlateas] = useState<string[]>([])
+  const [selectedSections, setSelectedSections] = useState<string[]>([])
   const [mapName, setMapName] = useState("")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -28,12 +28,12 @@ export default function SeatMapBuilder() {
   }
 
   // Toggle platea selection
-  const togglePlateaSelection = (plateaId: string, event: React.MouseEvent) => {
+  const toggleSectionSelection = (sectionId: string, event: React.MouseEvent) => {
     event.stopPropagation()
-    setSelectedPlateas(prev => 
-      prev.includes(plateaId) 
-        ? prev.filter(id => id !== plateaId)
-        : [...prev, plateaId]
+    setSelectedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
     )
   }
 
@@ -48,20 +48,20 @@ export default function SeatMapBuilder() {
 
   // Listen for platea selection from canvas
   useEffect(() => {
-    const handleSelectPlateaInSidebar = (event: CustomEvent) => {
-      const { plateaId } = event.detail
-      setSelectedPlatea(plateaId)
+    const handleSelectSectionInSidebar = (event: CustomEvent) => {
+      const { sectionId } = event.detail
+      setSelectedSection(sectionId)
     }
 
-    window.addEventListener('selectPlateaInSidebar', handleSelectPlateaInSidebar as EventListener)
+    window.addEventListener('selectSectionInSidebar', handleSelectSectionInSidebar as EventListener)
     
     return () => {
-      window.removeEventListener('selectPlateaInSidebar', handleSelectPlateaInSidebar as EventListener)
+      window.removeEventListener('selectSectionInSidebar', handleSelectSectionInSidebar as EventListener)
     }
   }, [])
 
   // Calculate selected seats count
-  const selectedSeats = plateas.reduce((sum, platea) => 
+  const selectedSeats = sections.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => 
       rowSum + row.seats.filter(seat => seat.status === 'selected').length, 0), 0)
 
@@ -102,41 +102,42 @@ export default function SeatMapBuilder() {
   const [confirmations, setConfirmations] = useState({
     deleteRows: false,
     deleteSeats: false,
+    deleteSections: false,
     clearMap: false
   })
   const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null)
 
-  const addPlatea = (count = 1) => {
-    const newPlateas: Platea[] = []
+  const addSection = (count = 1) => {
+    const newSections: Section[] = []
     for (let i = 0; i < count; i++) {
-      const plateaNumber = plateas.length + i + 1
-      const newPlatea: Platea = {
-        id: generatePlateaId(plateaNumber),
-        label: `Platea ${plateaNumber}`,
+      const sectionNumber = sections.length + i + 1
+      const newSection: Section = {
+        id: generateSectionId(sectionNumber),
+        label: `Section ${sectionNumber}`,
         rows: [],
         selected: false,
       }
-      newPlateas.push(newPlatea)
+      newSections.push(newSection)
     }
-    setPlateas([...plateas, ...newPlateas])
+    setSections([...sections, ...newSections])
     
     // Auto-seleccionar la primera platea nueva
-    if (newPlateas.length > 0) {
-      setSelectedPlatea(newPlateas[0].id)
+    if (newSections.length > 0) {
+      setSelectedSection(newSections[0].id)
     }
   }
 
-  const addRowToSelectedPlatea = (count = 1) => {
-    if (!selectedPlatea) return
+  const addRowToSelectedSection = (count = 1) => {
+    if (!selectedSection) return
 
-    setPlateas(plateas.map(platea => {
-      if (platea.id === selectedPlatea) {
-        const plateaNumber = extractPlateaNumber(platea.id)
+    setSections(sections.map(platea => {
+      if (platea.id === selectedSection) {
+        const sectionNumber = extractSectionNumber(platea.id)
         const newRows: Row[] = []
         for (let i = 0; i < count; i++) {
           const rowNumber = platea.rows.length + i + 1
           const newRow: Row = {
-            id: generateFilaId(plateaNumber, rowNumber),
+            id: generateFilaId(sectionNumber, rowNumber),
             label: `Fila ${rowNumber}`,
             seats: [],
             selected: false,
@@ -149,15 +150,15 @@ export default function SeatMapBuilder() {
     }))
   }
 
-  const addRowToSpecificPlatea = (plateaId: string, count = 1) => {
-    setPlateas(plateas.map(platea => {
-      if (platea.id === plateaId) {
-        const plateaNumber = extractPlateaNumber(platea.id)
+  const addRowToSpecificSection = (sectionId: string, count = 1) => {
+    setSections(sections.map(platea => {
+      if (platea.id === sectionId) {
+        const sectionNumber = extractSectionNumber(platea.id)
         const newRows: Row[] = []
         for (let i = 0; i < count; i++) {
           const rowNumber = platea.rows.length + i + 1
           const newRow: Row = {
-            id: generateFilaId(plateaNumber, rowNumber),
+            id: generateFilaId(sectionNumber, rowNumber),
             label: `Fila ${rowNumber}`,
             seats: [],
             selected: false,
@@ -170,7 +171,7 @@ export default function SeatMapBuilder() {
     }))
     
     // Auto-seleccionar la platea en el sidebar
-    setSelectedPlatea(plateaId)
+    setSelectedSection(sectionId)
   }
 
   const deleteSelectedRows = () => {
@@ -180,7 +181,7 @@ export default function SeatMapBuilder() {
   }
 
   const performDeleteRows = () => {
-    setPlateas(plateas.map(platea => ({
+    setSections(sections.map(platea => ({
       ...platea,
       rows: platea.rows.filter(row => !selectedRows.includes(row.id))
     })))
@@ -193,8 +194,14 @@ export default function SeatMapBuilder() {
     setConfirmations(prev => ({ ...prev, deleteSeats: true }))
   }
 
+  const deleteSelectedSections = () => {
+    if (selectedSections.length === 0) return
+    setPendingAction({ type: 'deleteSections', data: { count: selectedSections.length } })
+    setConfirmations(prev => ({ ...prev, deleteSections: true }))
+  }
+
   const performDeleteSeats = () => {
-    setPlateas(plateas.map(platea => ({
+    setSections(sections.map(platea => ({
       ...platea,
       rows: platea.rows.map(row => ({
         ...row,
@@ -203,11 +210,17 @@ export default function SeatMapBuilder() {
     })))
   }
 
+  const performDeleteSections = () => {
+    setSections(sections.filter(section => !selectedSections.includes(section.id)))
+    setSelectedSections([])
+    setSelectedSection(null)
+  }
+
   const saveMap = () => {
     // Auto-save functionality - could be extended to save to localStorage or backend
     const mapData = {
       name: mapName || 'Mapa sin nombre',
-      plateas,
+      sections,
       createdAt: new Date().toISOString(),
       version: '1.0'
     }
@@ -222,8 +235,8 @@ export default function SeatMapBuilder() {
   const addSeatsToSelectedRows = (seatCount: number) => {
     if (selectedRows.length === 0) return
 
-    setPlateas(plateas.map(platea => {
-      const plateaNumber = extractPlateaNumber(platea.id)
+    setSections(sections.map(platea => {
+      const sectionNumber = extractSectionNumber(platea.id)
       return {
         ...platea,
         rows: platea.rows.map(row => {
@@ -238,7 +251,7 @@ export default function SeatMapBuilder() {
               const numberInGroup = (seatIndexInRow % 10) + 1
               const letter = String.fromCharCode(65 + letterIndex) // A, B, C, etc.
               newSeats.push({
-                id: generateSeatId(plateaNumber, rowNumber, seatNumber),
+                id: generateSeatId(sectionNumber, rowNumber, seatNumber),
                 label: `${letter}${numberInGroup}`,
                 status: "available",
                 x: (row.seats.length + i) * 45 + 20,
@@ -254,7 +267,7 @@ export default function SeatMapBuilder() {
   }
 
   const clearMap = () => {
-    if (plateas.length > 0) {
+    if (sections.length > 0) {
       setConfirmations(prev => ({ ...prev, clearMap: true }))
     } else {
       performClearMap()
@@ -262,8 +275,8 @@ export default function SeatMapBuilder() {
   }
 
   const performClearMap = () => {
-    setPlateas([])
-    setSelectedPlatea(null)
+    setSections([])
+    setSelectedSection(null)
     setSelectedRows([])
     setMapName("")
   }
@@ -277,10 +290,14 @@ export default function SeatMapBuilder() {
       case 'deleteSeats':
         performDeleteSeats()
         break
+      case 'deleteSections':
+        performDeleteSections()
+        break
       case 'clearMap':
         performClearMap()
         break
     }
+    setConfirmations(prev => ({ ...prev, [type]: false }))
     setPendingAction(null)
   }
 
@@ -290,19 +307,19 @@ export default function SeatMapBuilder() {
   }
 
   // Calcular estadísticas
-  const totalPlateas = plateas.length
-  const totalRows = plateas.reduce((sum, platea) => sum + platea.rows.length, 0)
-  const totalSeats = plateas.reduce((sum, platea) => 
+  const totalSections = sections.length
+  const totalRows = sections.reduce((sum, platea) => sum + platea.rows.length, 0)
+  const totalSeats = sections.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0)
-  const availableSeats = plateas.reduce((sum, platea) => 
+  const availableSeats = sections.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => 
       rowSum + row.seats.filter(s => s.status === "available").length, 0), 0)
-  const occupiedSeats = plateas.reduce((sum, platea) => 
+  const occupiedSeats = sections.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => 
       rowSum + row.seats.filter(s => s.status === "occupied").length, 0), 0)
 
   const markSelectedSeatsAs = (status: "available" | "occupied") => {
-    setPlateas(plateas.map(platea => ({
+    setSections(sections.map(platea => ({
       ...platea,
       rows: platea.rows.map(row => ({
         ...row,
@@ -379,8 +396,8 @@ export default function SeatMapBuilder() {
               Nuevo mapa
             </Button>
             <JsonManager
-              plateas={plateas}
-              onPlateaChange={setPlateas}
+              sections={sections}
+              onSectionChange={setSections}
               mapName={mapName}
               onMapNameChange={setMapName}
               onClearMap={clearMap}
@@ -398,36 +415,47 @@ export default function SeatMapBuilder() {
         >
           {!sidebarCollapsed && (
             <div className="space-y-3">
-            {/* Platea Management */}
-            <Accordion title="Plateas" defaultOpen={true}>
+            {/* Section Management */}
+            <Accordion title="Secciones" defaultOpen={true}>
               <div className="space-y-2">
                 <Button 
-                  onClick={() => addPlatea(1)} 
+                  onClick={() => addSection(1)} 
                   size="sm"
                   className="w-full justify-start bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm"
                 >
                   <Plus className="h-3 w-3 mr-2" />
-                  Agregar platea
+                  Agregar sección
+                </Button>
+                <Button
+                  onClick={deleteSelectedSections}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-xl text-sm disabled:opacity-50"
+                  disabled={selectedSections.length === 0}
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                >
+                  <Trash2 className="h-3 w-3 mr-2" style={{ color: '#dc2626' }} />
+                  Borrar secciones selecc.
                 </Button>
               </div>
             </Accordion>
 
-            {/* Platea Selection */}
+            {/* Section Selection */}
             <Accordion 
-              title="Seleccionar Platea" 
+              title="Seleccionar Sección" 
               defaultOpen={true}
-              disabled={totalPlateas === 0}
+              disabled={totalSections === 0}
             >
-              {totalPlateas > 0 && (
+              {totalSections > 0 && (
                 <div className="space-y-2">
-                  {plateas.map((platea) => (
+                  {sections.map((platea) => (
                     <Button
                       key={platea.id}
-                      variant={selectedPlatea === platea.id ? "default" : "outline"}
+                      variant={selectedSection === platea.id ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedPlatea(platea.id)}
+                      onClick={() => setSelectedSection(platea.id)}
                       className={`w-full justify-start rounded-xl text-sm ${
-                        selectedPlatea === platea.id 
+                        selectedSection === platea.id 
                           ? "bg-blue-500 hover:bg-blue-600 text-white" 
                           : "border-gray-300 text-gray-700 hover:bg-gray-50"
                       }`}
@@ -448,12 +476,12 @@ export default function SeatMapBuilder() {
             <Accordion 
               title="Filas" 
               defaultOpen={true}
-              disabled={!selectedPlatea}
+              disabled={!selectedSection}
             >
-              {selectedPlatea && (
+              {selectedSection && (
                 <div className="space-y-2">
                   <Button 
-                    onClick={() => addRowToSelectedPlatea(1)} 
+                    onClick={() => addRowToSelectedSection(1)} 
                     variant="outline" 
                     size="sm"
                     className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
@@ -464,7 +492,7 @@ export default function SeatMapBuilder() {
                     </span>
                   </Button>
                   <Button 
-                    onClick={() => addRowToSelectedPlatea(5)} 
+                    onClick={() => addRowToSelectedSection(5)} 
                     variant="outline" 
                     size="sm"
                     className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
@@ -564,16 +592,16 @@ export default function SeatMapBuilder() {
           {/* Canvas */}
           <div className="flex-1 p-8">
             <SeatCanvas
-              plateas={plateas}
-              onPlateaChange={setPlateas}
+              sections={sections}
+              onSectionChange={setSections}
               selectedRows={selectedRows}
               onRowSelectionChange={setSelectedRows}
-              selectedPlateas={selectedPlateas}
-              onPlateaSelectionChange={setSelectedPlateas}
+              selectedSections={selectedSections}
+              onSectionSelectionChange={setSelectedSections}
               selectedSeats={selectedSeats}
               onMarkSelectedSeatsAs={markSelectedSeatsAs}
-              onAddRowToPlatea={(plateaId) => {
-                addRowToSpecificPlatea(plateaId, 1)
+              onAddRowToSection={(sectionId) => {
+                addRowToSpecificSection(sectionId, 1)
               }}
             />
           </div>
@@ -604,7 +632,7 @@ export default function SeatMapBuilder() {
                   <span className="font-medium">Controles:</span> Arrastra: mover • Click izq: seleccionar • Click der: ocupar/liberar
                 </div>
                 <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
-                  <span className="font-medium">Estadísticas:</span> {totalPlateas} plateas • {totalRows} filas • {totalSeats} asientos
+                  <span className="font-medium">Estadísticas:</span> {totalSections} sections • {totalRows} filas • {totalSeats} asientos
                 </div>
               </div>
             </div>
@@ -635,6 +663,18 @@ export default function SeatMapBuilder() {
         cancelText="Cancelar"
         variant="danger"
         details={["Esta acción no se puede deshacer", "Los asientos seleccionados se eliminarán permanentemente"]}
+      />
+
+      <ConfirmationDialog
+        open={confirmations.deleteSections}
+        onClose={() => closeConfirmation('deleteSections')}
+        onConfirm={() => handleConfirmation('deleteSections')}
+        title="Confirmar eliminación"
+        message={`¿Estás seguro de que quieres borrar ${pendingAction?.data?.count || 0} sección(es)?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        details={["Esta acción no se puede deshacer", "Todas las filas y asientos de estas secciones también se eliminarán"]}
       />
 
       <ConfirmationDialog

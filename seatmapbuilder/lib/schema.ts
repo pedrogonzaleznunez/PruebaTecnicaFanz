@@ -16,7 +16,7 @@ export const rowSchema = z.object({
   selected: z.boolean().optional(),
 });
 
-export const plateaSchema = z.object({
+export const sectionSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(1),
   rows: z.array(rowSchema),
@@ -25,11 +25,11 @@ export const plateaSchema = z.object({
 
 export const seatMapSchema = z.object({
   name: z.string().min(1),
-  plateas: z.array(plateaSchema),
+  sections: z.array(sectionSchema),
   createdAt: z.string().optional(),
   version: z.string().optional(),
   metadata: z.object({
-    totalPlateas: z.number(),
+    totalSections: z.number(),
     totalRows: z.number(),
     totalSeats: z.number(),
     exportedBy: z.string(),
@@ -38,7 +38,7 @@ export const seatMapSchema = z.object({
 
 export type Seat = z.infer<typeof seatSchema>;
 export type Row = z.infer<typeof rowSchema>;
-export type Platea = z.infer<typeof plateaSchema>;
+export type Section = z.infer<typeof sectionSchema>;
 export type SeatMap = z.infer<typeof seatMapSchema>;
 
 

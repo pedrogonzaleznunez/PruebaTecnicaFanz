@@ -2,28 +2,28 @@
 
 import type React from "react"
 import { useState, useRef, useCallback } from "react"
-import type { Platea, Row, Seat as SeatType } from "../lib/schema"
+import type { Section, Row, Seat as SeatType } from "../lib/schema"
 import { Seat } from "./Seat"
 import { FloatingSeatsPanel } from "./FloatingSeatsPanel"
 
 interface SeatCanvasProps {
-  plateas: Platea[]
-  onPlateaChange: (plateas: Platea[]) => void
+  sections: Section[]
+  onSectionChange: (sections: Section[]) => void
   selectedRows: string[]
   onRowSelectionChange: (rowIds: string[]) => void
-  selectedPlateas: string[]
-  onPlateaSelectionChange: (plateaIds: string[]) => void
-  onAddRowToPlatea?: (plateaId: string) => void
+  selectedSections: string[]
+  onSectionSelectionChange: (sectionIds: string[]) => void
+  onAddRowToSection?: (sectionId: string) => void
   selectedSeats?: number
   onMarkSelectedSeatsAs?: (status: "available" | "occupied") => void
 }
 
-export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelectionChange, selectedPlateas, onPlateaSelectionChange, onAddRowToPlatea, selectedSeats = 0, onMarkSelectedSeatsAs }: SeatCanvasProps) {
+export function SeatCanvas({ sections, onSectionChange, selectedRows, onRowSelectionChange, selectedSections, onSectionSelectionChange, onAddRowToSection, selectedSeats = 0, onMarkSelectedSeatsAs }: SeatCanvasProps) {
   const [dragState, setDragState] = useState<{
     isDragging: boolean
     seatId: string | null
     rowId: string | null
-    plateaId: string | null
+    sectionId: string | null
     startX: number
     startY: number
     offsetX: number
@@ -32,7 +32,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
     isDragging: false,
     seatId: null,
     rowId: null,
-    plateaId: null,
+    sectionId: null,
     startX: 0,
     startY: 0,
     offsetX: 0,
@@ -57,7 +57,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
   const canvasRef = useRef<HTMLDivElement>(null)
   const mouseDownTimeRef = useRef<number>(0)
 
-  const handleSeatMouseDown = useCallback((e: React.MouseEvent, plateaId: string, rowId: string, seatId: string) => {
+  const handleSeatMouseDown = useCallback((e: React.MouseEvent, sectionId: string, rowId: string, seatId: string) => {
     if (e.button !== 0) return // Only left click
 
     mouseDownTimeRef.current = Date.now()
@@ -67,7 +67,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       isDragging: false,
       seatId,
       rowId,
-      plateaId,
+      sectionId,
       startX: e.clientX,
       startY: e.clientY,
       offsetX: e.clientX - rect.left,
@@ -96,12 +96,12 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         const newX = e.clientX - canvasRect.left - dragState.offsetX
         const newY = e.clientY - canvasRect.top - dragState.offsetY
 
-        onPlateaChange(
-          plateas.map((platea) => {
-            if (platea.id === dragState.plateaId) {
+        onSectionChange(
+          sections.map((section) => {
+            if (section.id === dragState.sectionId) {
               return {
-                ...platea,
-                rows: platea.rows.map((row) => {
+                ...section,
+                rows: section.rows.map((row) => {
                   if (row.id === dragState.rowId) {
                     return {
                       ...row,
@@ -121,12 +121,12 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                 })
               }
             }
-            return platea
+            return section
           }),
         )
       }
     },
-    [dragState, plateas, onPlateaChange],
+    [dragState, sections, onSectionChange],
   )
 
   const handleMouseUp = useCallback(() => {
@@ -134,7 +134,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       isDragging: false,
       seatId: null,
       rowId: null,
-      plateaId: null,
+      sectionId: null,
       startX: 0,
       startY: 0,
       offsetX: 0,
@@ -189,7 +189,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
 
     console.log('Box selection ended, selecting seats...')
     // Calculate which seats are within the selection rectangle
-    const selectedSeats: Array<{ plateaId: string; rowId: string; seatId: string }> = []
+    const selectedSeats: Array<{ sectionId: string; rowId: string; seatId: string }> = []
     
     // Get all seat elements
     const seatElements = document.querySelectorAll('[data-seat-id]')
@@ -214,11 +214,11 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         if (seatId) {
           console.log('Seat', seatId, 'is within selection rectangle')
           // Find the seat in our data structure
-          plateas.forEach(platea => {
-            platea.rows.forEach(row => {
+          sections.forEach(section => {
+            section.rows.forEach(row => {
               row.seats.forEach(seat => {
                 if (seat.id === seatId) {
-                  selectedSeats.push({ plateaId: platea.id, rowId: row.id, seatId: seat.id })
+                  selectedSeats.push({ sectionId: section.id, rowId: row.id, seatId: seat.id })
                 }
               })
             })
@@ -231,10 +231,10 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
 
     // Update seat selection
     if (selectedSeats.length > 0) {
-      onPlateaChange(
-        plateas.map(platea => ({
-          ...platea,
-          rows: platea.rows.map(row => ({
+      onSectionChange(
+        sections.map(section => ({
+          ...section,
+          rows: section.rows.map(row => ({
             ...row,
             seats: row.seats.map(seat => {
               const isSelected = selectedSeats.some(s => s.seatId === seat.id)
@@ -253,18 +253,18 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       endX: 0,
       endY: 0
     })
-  }, [boxSelection, plateas, onPlateaChange])
+  }, [boxSelection, sections, onSectionChange])
 
   const handleSeatRightClick = useCallback(
-    (e: React.MouseEvent, plateaId: string, rowId: string, seatId: string) => {
+    (e: React.MouseEvent, sectionId: string, rowId: string, seatId: string) => {
       e.preventDefault() // Prevenir menú contextual
       
-      onPlateaChange(
-        plateas.map((platea) => {
-          if (platea.id === plateaId) {
+      onSectionChange(
+        sections.map((section) => {
+          if (section.id === sectionId) {
             return {
-              ...platea,
-              rows: platea.rows.map((row) => {
+              ...section,
+              rows: section.rows.map((row) => {
                 if (row.id === rowId) {
                   return {
                     ...row,
@@ -283,15 +283,15 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
               })
             }
           }
-          return platea
+          return section
         }),
       )
     },
-    [plateas, onPlateaChange],
+    [sections, onSectionChange],
   )
 
   const handleSeatClick = useCallback(
-    (plateaId: string, rowId: string, seatId: string, event?: React.MouseEvent) => {
+    (sectionId: string, rowId: string, seatId: string, event?: React.MouseEvent) => {
       if (dragState.isDragging) return // No hacer click si está arrastrando
       
       // Verificar que fue un click rápido (menos de 200ms)
@@ -302,8 +302,8 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       
       if (isCmdClick) {
         // Selección de rango con Cmd+Click
-        const platea = plateas.find(p => p.id === plateaId)
-        const row = platea?.rows.find(r => r.id === rowId)
+        const section = sections.find(p => p.id === sectionId)
+        const row = section?.rows.find(r => r.id === rowId)
         if (!row) return
         
         const clickedSeatIndex = row.seats.findIndex(s => s.id === seatId)
@@ -311,12 +311,12 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         
         if (selectedSeats.length === 0) {
           // Si no hay asientos seleccionados, seleccionar solo este
-          onPlateaChange(
-            plateas.map((platea) => {
-              if (platea.id === plateaId) {
+          onSectionChange(
+            sections.map((section) => {
+              if (section.id === sectionId) {
                 return {
-                  ...platea,
-                  rows: platea.rows.map((row) => {
+                  ...section,
+                  rows: section.rows.map((row) => {
                     if (row.id === rowId) {
                       return {
                         ...row,
@@ -332,7 +332,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                   })
                 }
               }
-              return platea
+              return section
             }),
           )
         } else {
@@ -341,12 +341,12 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
           const startIndex = Math.min(firstSelectedIndex, clickedSeatIndex)
           const endIndex = Math.max(firstSelectedIndex, clickedSeatIndex)
           
-          onPlateaChange(
-            plateas.map((platea) => {
-              if (platea.id === plateaId) {
+          onSectionChange(
+            sections.map((section) => {
+              if (section.id === sectionId) {
                 return {
-                  ...platea,
-                  rows: platea.rows.map((row) => {
+                  ...section,
+                  rows: section.rows.map((row) => {
                     if (row.id === rowId) {
                       return {
                         ...row,
@@ -362,26 +362,26 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                   })
                 }
               }
-              return platea
+              return section
             }),
           )
         }
       } else {
         // Click normal - toggle individual con selección jerárquica
-        const platea = plateas.find(p => p.id === plateaId)
-        const row = platea?.rows.find(r => r.id === rowId)
+        const section = sections.find(p => p.id === sectionId)
+        const row = section?.rows.find(r => r.id === rowId)
         const seat = row?.seats.find(s => s.id === seatId)
         
         if (!seat) return
         
         const newSeatStatus = seat.status === "selected" ? "available" : "selected"
         
-        onPlateaChange(
-          plateas.map((platea) => {
-            if (platea.id === plateaId) {
+        onSectionChange(
+          sections.map((section) => {
+            if (section.id === sectionId) {
               return {
-                ...platea,
-                rows: platea.rows.map((row) => {
+                ...section,
+                rows: section.rows.map((row) => {
                   if (row.id === rowId) {
                     return {
                       ...row,
@@ -397,25 +397,25 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                 })
               }
             }
-            return platea
+            return section
           }),
         )
         
-        // Selección jerárquica: si se selecciona un asiento, seleccionar también su fila y platea
+        // Selección jerárquica: si se selecciona un asiento, seleccionar también su fila y section
         if (newSeatStatus === "selected") {
           // Seleccionar la fila si no está seleccionada
           if (!selectedRows.includes(rowId)) {
             onRowSelectionChange([...selectedRows, rowId])
           }
           
-          // Seleccionar la platea si no está seleccionada
-          if (!selectedPlateas.includes(plateaId)) {
-            onPlateaSelectionChange([...selectedPlateas, plateaId])
+          // Seleccionar la section si no está seleccionada
+          if (!selectedSections.includes(sectionId)) {
+            onSectionSelectionChange([...selectedSections, sectionId])
           }
         }
       }
     },
-    [plateas, onPlateaChange, dragState.isDragging, selectedRows, onRowSelectionChange, selectedPlateas, onPlateaSelectionChange],
+    [sections, onSectionChange, dragState.isDragging, selectedRows, onRowSelectionChange, selectedSections, onSectionSelectionChange],
   )
 
   const toggleRowSelection = useCallback(
@@ -426,29 +426,29 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
       
       if (isCmdClick) {
         // Selección de rango con Cmd+Click para filas
-        const platea = plateas.find(p => p.rows.some(r => r.id === rowId))
-        if (!platea) return
+        const section = sections.find(p => p.rows.some(r => r.id === rowId))
+        if (!section) return
         
-        const clickedRowIndex = platea.rows.findIndex(r => r.id === rowId)
+        const clickedRowIndex = section.rows.findIndex(r => r.id === rowId)
         
         if (selectedRows.length === 0) {
           // Si no hay filas seleccionadas, seleccionar solo esta
           onRowSelectionChange([rowId])
         } else {
-          // Encontrar la primera fila seleccionada en la misma platea
+          // Encontrar la primera fila seleccionada en la misma section
           const firstSelectedRowId = selectedRows.find(id => 
-            platea.rows.some(r => r.id === id)
+            section.rows.some(r => r.id === id)
           )
           if (!firstSelectedRowId) {
             onRowSelectionChange([rowId])
             return
           }
           
-          const firstSelectedIndex = platea.rows.findIndex(r => r.id === firstSelectedRowId)
+          const firstSelectedIndex = section.rows.findIndex(r => r.id === firstSelectedRowId)
           const startIndex = Math.min(firstSelectedIndex, clickedRowIndex)
           const endIndex = Math.max(firstSelectedIndex, clickedRowIndex)
           
-          const rangeRowIds = platea.rows
+          const rangeRowIds = section.rows
             .slice(startIndex, endIndex + 1)
             .map(r => r.id)
           
@@ -462,7 +462,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         onRowSelectionChange(newSelection)
       }
     },
-    [selectedRows, onRowSelectionChange, plateas],
+    [selectedRows, onRowSelectionChange, sections],
   )
 
   return (
@@ -487,11 +487,11 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         // Deseleccionar todo si se hace clic en el canvas vacío
         if (e.target === e.currentTarget) {
           onRowSelectionChange([])
-          onPlateaSelectionChange([])
+          onSectionSelectionChange([])
         }
       }}
     >
-      {plateas.length === 0 ? (
+      {sections.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-md">
@@ -501,33 +501,33 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Mapa vacío</h3>
             <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
-              Comienza agregando plateas desde el panel lateral
+              Comienza agregando sections desde el panel lateral
             </p>
           </div>
         </div>
       ) : (
         <div className="absolute inset-0 p-8" style={{ minWidth: '1400px', minHeight: '800px' }}>
-          {plateas.map((platea, plateaIndex) => (
-            <div key={platea.id} className="mb-12">
-              {/* Platea Header */}
+          {sections.map((section, sectionIndex) => (
+            <div key={section.id} className="mb-12">
+              {/* Section Header */}
               <div 
                 className={`mb-6 p-4 bg-white border rounded-2xl shadow-md cursor-pointer transition-all duration-200 ${
-                  selectedPlateas.includes(platea.id)
+                  selectedSections.includes(section.id)
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300 hover:shadow-lg"
                 }`}
                 onClick={(e) => {
                   e.stopPropagation()
-                  const newSelectedPlateas = selectedPlateas.includes(platea.id)
-                    ? selectedPlateas.filter(id => id !== platea.id)
-                    : [...selectedPlateas, platea.id]
+                  const newSelectedSections = selectedSections.includes(section.id)
+                    ? selectedSections.filter(id => id !== section.id)
+                    : [...selectedSections, section.id]
                   
-                  onPlateaSelectionChange(newSelectedPlateas)
+                  onSectionSelectionChange(newSelectedSections)
                   
-                  // Auto-seleccionar la platea en el sidebar si no hay ninguna seleccionada
-                  if (newSelectedPlateas.includes(platea.id) && !selectedPlateas.includes(platea.id)) {
+                  // Auto-seleccionar la section en el sidebar si no hay ninguna seleccionada
+                  if (newSelectedSections.includes(section.id) && !selectedSections.includes(section.id)) {
                     // Emitir evento para seleccionar en sidebar
-                    const event = new CustomEvent('selectPlateaInSidebar', { detail: { plateaId: platea.id } })
+                    const event = new CustomEvent('selectSectionInSidebar', { detail: { sectionId: section.id } })
                     window.dispatchEvent(event)
                   }
                 }}
@@ -535,25 +535,25 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${
-                      selectedPlateas.includes(platea.id) ? "bg-blue-600" : "bg-blue-500"
+                      selectedSections.includes(section.id) ? "bg-blue-600" : "bg-blue-500"
                     }`}></div>
                     <h2 className={`text-lg font-semibold ${
-                      selectedPlateas.includes(platea.id) ? "text-blue-800" : "text-gray-800"
-                    }`}>{platea.label}</h2>
+                      selectedSections.includes(section.id) ? "text-blue-800" : "text-gray-800"
+                    }`}>{section.label}</h2>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span className="bg-gray-100 px-2 py-1 rounded-lg">
-                      {platea.rows.length} filas
+                      {section.rows.length} filas
                     </span>
                     <span className="bg-gray-100 px-2 py-1 rounded-lg">
-                      {platea.rows.reduce((sum, row) => sum + row.seats.length, 0)} asientos
+                      {section.rows.reduce((sum, row) => sum + row.seats.length, 0)} asientos
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Rows within Platea */}
-              {platea.rows.map((row, rowIndex) => (
+              {/* Rows within Section */}
+              {section.rows.map((row, rowIndex) => (
                 <div key={row.id} className="flex items-center gap-4 mb-4" style={{ height: '50px' }}>
                   {/* Row Header - Fixed width */}
                   <div className="flex-shrink-0" style={{ width: '180px' }}>
@@ -590,7 +590,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                         data-seat-id={seat.id}
                         onMouseDown={(e) => {
                           e.stopPropagation()
-                          handleSeatMouseDown(e, platea.id, row.id, seat.id)
+                          handleSeatMouseDown(e, section.id, row.id, seat.id)
                         }}
                         className="relative"
                       >
@@ -601,10 +601,10 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
                           x={0}
                           y={0}
                           isDragging={dragState.seatId === seat.id && dragState.isDragging}
-                          onSelect={(event) => handleSeatClick(platea.id, row.id, seat.id, event)}
+                          onSelect={(event) => handleSeatClick(section.id, row.id, seat.id, event)}
                           onStatusChange={() => {
                             const mockEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
-                            handleSeatRightClick(mockEvent as any, platea.id, row.id, seat.id);
+                            handleSeatRightClick(mockEvent as any, section.id, row.id, seat.id);
                           }}
                         />
                       </div>
@@ -617,7 +617,7 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex-shrink-0" style={{ width: '180px' }}>
                   <button
-                    onClick={() => onAddRowToPlatea?.(platea.id)}
+                    onClick={() => onAddRowToSection?.(section.id)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -665,16 +665,16 @@ export function SeatCanvas({ plateas, onPlateaChange, selectedRows, onRowSelecti
         onMarkAsOccupied={() => onMarkSelectedSeatsAs?.("occupied")}
         onClose={() => {
           // Deseleccionar todos los asientos
-          const updatedPlateas = plateas.map((platea: Platea) => ({
-            ...platea,
-            rows: platea.rows.map((row: Row) => ({
+          const updatedSections = sections.map((section: Section) => ({
+            ...section,
+            rows: section.rows.map((row: Row) => ({
               ...row,
               seats: row.seats.map((seat: SeatType) => 
                 seat.status === 'selected' ? { ...seat, status: 'available' as const } : seat
               )
             }))
           }))
-          onPlateaChange(updatedPlateas)
+          onSectionChange(updatedSections)
         }}
       />
     </div>

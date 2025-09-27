@@ -8,12 +8,12 @@ import { Label } from "./ui/label"
 import { Badge } from "./ui/badge"
 import { Textarea } from "./ui/textarea"
 import { Download, Upload, FileText, Copy, X } from "lucide-react"
-import type { Platea, SeatMap } from "../lib/schema"
+import type { Section, SeatMap } from "../lib/schema"
 import { ConfirmationDialog } from "./ui/confirmation-dialog"
 
 interface JsonManagerProps {
-  plateas: Platea[]
-  onPlateaChange: (plateas: Platea[]) => void
+  sections: Section[]
+  onSectionChange: (sections: Section[]) => void
   mapName: string
   onMapNameChange: (name: string) => void
   onClearMap: () => void
@@ -26,7 +26,7 @@ interface ValidationResult {
   data?: SeatMap
 }
 
-export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange, onClearMap }: JsonManagerProps) {
+export function JsonManager({ sections, onSectionChange, mapName, onMapNameChange, onClearMap }: JsonManagerProps) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importText, setImportText] = useState("")
@@ -70,58 +70,58 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
       warnings.push("Nombre del mapa faltante o inválido")
     }
 
-    if (!data.plateas || !Array.isArray(data.plateas)) {
-      errors.push("La propiedad 'plateas' es requerida y debe ser un array")
+    if (!data.sections || !Array.isArray(data.sections)) {
+      errors.push("La propiedad 'sections' es requerida y debe ser un array")
       return { isValid: false, errors, warnings }
     }
 
-    // Validate plateas
-    data.plateas.forEach((platea: any, plateaIndex: number) => {
+    // Validate sections
+    data.sections.forEach((platea: any, plateaIndex: number) => {
       if (!platea.id || typeof platea.id !== "string") {
-        errors.push(`Platea ${plateaIndex + 1}: ID faltante o inválido`)
+        errors.push(`Section ${plateaIndex + 1}: ID faltante o inválido`)
       }
 
       if (!platea.label || typeof platea.label !== "string") {
-        warnings.push(`Platea ${plateaIndex + 1}: Etiqueta faltante o inválida`)
+        warnings.push(`Section ${plateaIndex + 1}: Etiqueta faltante o inválida`)
       }
 
       if (!platea.rows || !Array.isArray(platea.rows)) {
-        errors.push(`Platea ${plateaIndex + 1}: La propiedad 'rows' debe ser un array`)
+        errors.push(`Section ${plateaIndex + 1}: La propiedad 'rows' debe ser un array`)
         return
       }
 
       // Validate rows within platea
       platea.rows.forEach((row: any, rowIndex: number) => {
         if (!row.id || typeof row.id !== "string") {
-          errors.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}: ID faltante o inválido`)
+          errors.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}: ID faltante o inválido`)
         }
 
         if (!row.label || typeof row.label !== "string") {
-          warnings.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}: Etiqueta faltante o inválida`)
+          warnings.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}: Etiqueta faltante o inválida`)
         }
 
         if (!row.seats || !Array.isArray(row.seats)) {
-          errors.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}: La propiedad 'seats' debe ser un array`)
+          errors.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}: La propiedad 'seats' debe ser un array`)
           return
         }
 
         // Validate seats
         row.seats.forEach((seat: any, seatIndex: number) => {
           if (!seat.id || typeof seat.id !== "string") {
-            errors.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: ID faltante o inválido`)
+            errors.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: ID faltante o inválido`)
           }
 
           if (!seat.label || typeof seat.label !== "string") {
-            warnings.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Etiqueta faltante o inválida`)
+            warnings.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Etiqueta faltante o inválida`)
           }
 
           if (typeof seat.x !== "number" || typeof seat.y !== "number") {
-            errors.push(`Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Coordenadas x,y deben ser números`)
+            errors.push(`Section ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Coordenadas x,y deben ser números`)
           }
 
           if (!["available", "occupied", "selected", "unlabeled"].includes(seat.status)) {
             warnings.push(
-              `Platea ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Estado '${seat.status}' no reconocido, se usará 'available'`,
+              `Section ${plateaIndex + 1}, Fila ${rowIndex + 1}, Asiento ${seatIndex + 1}: Estado '${seat.status}' no reconocido, se usará 'available'`,
             )
           }
         })
@@ -130,7 +130,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
 
     // Check for duplicate IDs
     const allIds = new Set()
-    data.plateas.forEach((platea: any) => {
+    data.sections.forEach((platea: any) => {
       if (allIds.has(platea.id)) {
         errors.push(`ID de platea duplicado: ${platea.id}`)
       }
@@ -170,7 +170,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
               // Auto-fix common issues
               const cleanedData = {
                 ...result.data,
-                plateas: result.data.plateas.map((platea: any) => ({
+                sections: result.data.sections.map((platea: any) => ({
                   ...platea,
                   selected: false,
                   rows: platea.rows.map((row: any) => ({
@@ -186,15 +186,15 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
                 })),
               }
 
-              const totalPlateas = cleanedData.plateas.length
-              const totalRows = cleanedData.plateas.reduce((sum: number, platea: any) => sum + platea.rows.length, 0)
-              const totalSeats = cleanedData.plateas.reduce((sum: number, platea: any) => 
+              const totalSections = cleanedData.sections.length
+              const totalRows = cleanedData.sections.reduce((sum: number, platea: any) => sum + platea.rows.length, 0)
+              const totalSeats = cleanedData.sections.reduce((sum: number, platea: any) => 
                 sum + platea.rows.reduce((rowSum: number, row: any) => rowSum + row.seats.length, 0), 0)
 
               // Store data for confirmation dialog
               setPendingImportData({
                 data: cleanedData,
-                stats: { totalPlateas, totalRows, totalSeats },
+                stats: { totalSections, totalRows, totalSeats },
                 warnings: result.warnings.length
               })
               setConfirmations(prev => ({ ...prev, importMap: true }))
@@ -239,13 +239,13 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
   const performExport = () => {
     const data: SeatMap = {
       name: mapName,
-      plateas: plateas,
+      sections: sections,
       createdAt: new Date().toISOString(),
       version: "1.0",
       metadata: {
-        totalPlateas: plateas.length,
-        totalRows: plateas.reduce((sum, platea) => sum + platea.rows.length, 0),
-        totalSeats: plateas.reduce((sum, platea) => 
+        totalSections: sections.length,
+        totalRows: sections.reduce((sum, platea) => sum + platea.rows.length, 0),
+        totalSeats: sections.reduce((sum, platea) => 
           sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0),
         exportedBy: "SeatMapBuilder (Fanz)",
       },
@@ -264,13 +264,13 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
   const copyToClipboard = async () => {
     const data: SeatMap = {
       name: mapName,
-      plateas: plateas,
+      sections: sections,
       createdAt: new Date().toISOString(),
       version: "1.0",
       metadata: {
-        totalPlateas: plateas.length,
-        totalRows: plateas.reduce((sum, platea) => sum + platea.rows.length, 0),
-        totalSeats: plateas.reduce((sum, platea) => 
+        totalSections: sections.length,
+        totalRows: sections.reduce((sum, platea) => sum + platea.rows.length, 0),
+        totalSeats: sections.reduce((sum, platea) => 
           sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0),
         exportedBy: "SeatMapBuilder (Fanz)",
       },
@@ -287,7 +287,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
   // Confirmation handlers
   const handleImportConfirm = () => {
     if (pendingImportData) {
-      onPlateaChange(pendingImportData.data.plateas)
+      onSectionChange(pendingImportData.data.sections)
       onMapNameChange(pendingImportData.data.name || "")
       setImportDialogOpen(false)
       setImportText("")
@@ -300,9 +300,9 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
     setConfirmations(prev => ({ ...prev, [key]: false }))
   }
 
-  const totalPlateas = plateas.length
-  const totalRows = plateas.reduce((sum, platea) => sum + platea.rows.length, 0)
-  const totalSeats = plateas.reduce((sum, platea) => 
+  const totalSections = sections.length
+  const totalRows = sections.reduce((sum, platea) => sum + platea.rows.length, 0)
+  const totalSeats = sections.reduce((sum, platea) => 
     sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0)
 
   return (
@@ -310,7 +310,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
       {/* Export Button */}
       <Button 
         variant="outline" 
-        disabled={plateas.length === 0}
+        disabled={sections.length === 0}
         onClick={() => setExportDialogOpen(true)}
         className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 rounded-2xl shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
@@ -355,8 +355,8 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
                 <h4 className="text-sm font-medium mb-2 text-black">Resumen del mapa:</h4>
                 <div className="space-y-1 text-sm text-black">
                   <div className="flex justify-between">
-                    <span>Plateas:</span>
-                    <Badge variant="secondary" className="bg-gray-200 text-black">{totalPlateas}</Badge>
+                    <span>Sections:</span>
+                    <Badge variant="secondary" className="bg-gray-200 text-black">{totalSections}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Filas:</span>
@@ -471,9 +471,9 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
                         <div className="flex-1">
                         <div className="font-medium text-green-800">JSON válido</div>
                         <div className="text-sm text-green-700 mt-1">
-                          El archivo contiene {validationResult.data?.plateas.length} plateas con{" "}
-                          {validationResult.data?.plateas.reduce((sum, platea) => sum + platea.rows.length, 0)} filas y{" "}
-                          {validationResult.data?.plateas.reduce((sum, platea) => 
+                          El archivo contiene {validationResult.data?.sections.length} sections con{" "}
+                          {validationResult.data?.sections.reduce((sum, platea) => sum + platea.rows.length, 0)} filas y{" "}
+                          {validationResult.data?.sections.reduce((sum, platea) => 
                             sum + platea.rows.reduce((rowSum, row) => rowSum + row.seats.length, 0), 0)} asientos.
                         </div>
                         </div>
@@ -529,7 +529,7 @@ export function JsonManager({ plateas, onPlateaChange, mapName, onMapNameChange,
         cancelText="Cancelar"
         variant="info"
         details={pendingImportData ? [
-          `${pendingImportData.stats.totalPlateas} plateas`,
+          `${pendingImportData.stats.totalSections} sections`,
           `${pendingImportData.stats.totalRows} filas`,
           `${pendingImportData.stats.totalSeats} asientos`,
           ...(pendingImportData.warnings > 0 ? [`${pendingImportData.warnings} advertencias`] : [])
