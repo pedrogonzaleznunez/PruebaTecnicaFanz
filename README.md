@@ -1,6 +1,6 @@
 # PruebaTecnicaFanz
 
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)![Zod](https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white)
 
 Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeScript. Esta aplicación permite crear, editar y gestionar mapas de asientos para teatros, auditorios y otros espacios con múltiples plateas.
 
@@ -8,11 +8,9 @@ Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeS
 
 * **Constructor Visual**: Interfaz drag-and-drop para crear mapas de asientos
 * **Múltiples Plateas**: Soporte para múltiples secciones (plateas) con filas y asientos
-* **Gestión de Estados**: Control de disponibilidad de asientos (disponible, ocupado, reservado)
-* **Exportación/Importación**: Guardar y cargar mapas en formato JSON
+* **Gestión de Estados**: Control de disponibilidad de asientos (libre, ocupado)
+* **Exportación/Importación**: importar y exportar mapas en formato JSON
 * **Selección Masiva**: Herramientas para seleccionar y modificar múltiples asientos
-* **Interfaz Responsiva**: Diseño adaptativo para diferentes tamaños de pantalla
-* **Integración con Seats.io**: Renderizado avanzado de mapas de asientos
 
 ## 🚀 Instalación
 
@@ -79,8 +77,11 @@ npm run dev          # Ejecuta el proyecto en modo desarrollo
 │   └── ejemplo-json-ids.json # Ejemplo de estructura de datos
 ├── propms/                   # Herramientas de prompts
 │   ├── generate_prompts.py   # Script para generar prompts
-│   ├── chat.md              # Historial de conversaciones
-│   └── prompts.jsonl        # Prompts en formato JSONL
+│   ├── chat.md               # Historial de conversaciones
+│   ├── README.md             # Explicacion sobre script generador de prompts 
+│   ├── promptsV1.jsonl        # Prompts en formato JSONL
+│   ├── promptsV1.jsonl        # Prompts en formato JSONL de la version 1.X
+│   └── promptsV2.jsonl        # Prompts en formato JSONL de la version 2.X
 └── README.md                # Este archivo
 ```
 
@@ -109,7 +110,6 @@ npm run dev          # Ejecuta el proyecto en modo desarrollo
 ## 💻 Atajos utiles:
 
 * **Seleccionar varios asientos**: Seleccionar un asiento, mantener presionado CMD/Cntrl + click en otro asiento. Este comando seleccionará todos los asientos entre ambos clicks.
-* **Seleccionar varias filas**: Idem al comando anterior pero con las filas.
 
 ## 🔧 Tecnologías Utilizadas
 
@@ -139,11 +139,15 @@ El mapa de asientos se almacena en formato JSON con la siguiente estructura:
 
 ``` json
 {
-  "name": "Nombre del Mapa",
+  "name": "Movistar Arena",
   "plateas": [
     {
       "id": "platea-p1",
-      "label": "Platea 1",
+      "label": "Platea Izquierda Superior",
+      "x": 135,
+      "y": 80,
+      "width": 220,
+      "height": 250,
       "rows": [
         {
           "id": "fila-p1f1",
@@ -151,19 +155,24 @@ El mapa de asientos se almacena en formato JSON con la siguiente estructura:
           "seats": [
             {
               "id": "seat-p1f1n1",
+              "x": 0,
+              "y": 0,
               "label": "A1",
               "status": "available",
-              "x": 20,
-              "y": 10
+
+          
+            // mora data ...
+
             }
           ]
         }
       ]
     }
-  ],
-  "createdAt": "2025-01-27T19:00:00.000Z",
-  "version": "1.0"
+  ]
 }
+
+
+
 ```
 
 ## 🎨 Personalización
@@ -179,13 +188,7 @@ Los estilos se pueden personalizar modificando:
 
 Los componentes UI están en `components/ui/` y siguen el patrón de diseño de shadcn/ui.
 
-## 🚀 Despliegue
 
-### Vercel (Recomendado)
-
-1. Conectar el repositorio a Vercel
-2. Configurar el directorio de build como `seatmapbuilder`
-3. Desplegar automáticamente
 
 ### Otras Plataformas
 
@@ -195,22 +198,7 @@ npm run build
 npm run start
 ```
 
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
-
-## 📝 Licencia
-
-Este proyecto es parte de una prueba técnica para Fanz.
-
-## 📞 Contacto
-
-Para preguntas o soporte, contacta al desarrollador del proyecto.
-
-- - -
+## 🧪 Extra
 
 **Desarrollado por Pedro González Núñez**
+

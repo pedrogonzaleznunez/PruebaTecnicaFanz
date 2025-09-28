@@ -146,14 +146,15 @@ export function SectionCanvas({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        {/* Stadium background pattern */}
+        {/* Grid background pattern */}
         <div 
-          className="absolute inset-0 opacity-5"
+          className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 50% 100%, #3b82f6 1px, transparent 1px)
+              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
             `,
-            backgroundSize: '40px 40px'
+            backgroundSize: '20px 20px'
           }}
         />
         

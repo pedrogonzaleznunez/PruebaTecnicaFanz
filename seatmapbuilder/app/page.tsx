@@ -335,19 +335,19 @@ export default function SeatMapBuilder() {
     // Crear 7 secciones en layout de estadio (6 tribunas + 1 campo central)
     const sectionsConfig = [
       // Sección 1 - Lateral izquierda superior
-      { x: startX, y: 80, width: lateralWidth, height: lateralHeight, label: "Tribuna Izquierda Superior" },
+      { x: startX, y: 80, width: lateralWidth, height: lateralHeight, label: "Platea Izquierda Superior" },
       // Sección 2 - Central izquierda
-      { x: startX + lateralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Tribuna Central Izquierda" },
+      { x: startX + lateralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Platea Central Izquierda" },
       // Sección 3 - Central derecha
-      { x: startX + lateralWidth + spacing + centralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Tribuna Central Derecha" },
+      { x: startX + lateralWidth + spacing + centralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Platea Central Derecha" },
       // Sección 4 - Lateral derecha superior
-      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80, width: lateralWidth, height: lateralHeight, label: "Tribuna Derecha Superior" },
-      // Sección 5 - Campo Central (más cerca de las tribunas centrales)
+      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80, width: lateralWidth, height: lateralHeight, label: "Platea Derecha Superior" },
+      // Sección 5 - Campo Central (más cerca de las Plateas centrales)
       { x: startX + lateralWidth + spacing, y: 100 + centralHeight + spacing + 50, width: centralWidth * 2 + spacing, height: centralHeight, label: "Campo Central" },
       // Sección 6 - Lateral izquierda inferior
-      { x: startX, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Tribuna Izquierda Inferior" },
+      { x: startX, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Platea Izquierda Inferior" },
       // Sección 7 - Lateral derecha inferior
-      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Tribuna Derecha Inferior" }
+      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Platea Derecha Inferior" }
     ]
     
     sectionsConfig.forEach((config, index) => {
@@ -514,44 +514,6 @@ export default function SeatMapBuilder() {
       </header>
 
       {/* Statistics bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span className="text-sm text-gray-600">
-                <span className="font-medium text-gray-900">{totalSections}</span> secciones
-              </span>
-                </div>
-                <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">
-                <span className="font-medium text-gray-900">{totalRows}</span> filas
-              </span>
-                </div>
-                <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">
-                <span className="font-medium text-gray-900">{totalSeats}</span> asientos
-              </span>
-                </div>
-              </div>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">
-                <span className="font-medium text-green-600">{availableSeats}</span> libres
-              </span>
-                </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">
-                <span className="font-medium text-violet-600">{occupiedSeats}</span> ocupados
-              </span>
-                </div>
-              </div>
-            </div>
-          </div>
 
       <div className="flex h-[calc(100vh-140px)]">
         {/* Main canvas area */}
@@ -562,8 +524,8 @@ export default function SeatMapBuilder() {
           <SectionCanvas
             sections={sections}
             selectedSectionId={selectedSection}
-               selectedSections={selectedSections}
-               onSectionSelect={handleSectionSelect}
+              selectedSections={selectedSections}
+              onSectionSelect={handleSectionSelect}
             onSectionUpdate={updateSection}
             onCreateStadium={createStadium}
           />
@@ -584,11 +546,51 @@ export default function SeatMapBuilder() {
             onRowSelectionChange={setSelectedRows}
             selectedSeats={selectedSeats}
             onMarkSelectedSeatsAs={markSelectedSeatsAs}
-             onDeleteSelectedSeats={deleteSelectedSeats}
-             onDeleteSection={deleteSelectedSections}
-             hasSelectedSection={!!selectedSection}
-             canvasCollapsed={canvasCollapsed}
+            onDeleteSelectedSeats={deleteSelectedSeats}
+            onDeleteSection={deleteSelectedSections}
+            hasSelectedSection={!!selectedSection}
+            canvasCollapsed={canvasCollapsed}
           />
+        </div>
+      </div>
+
+      {/* Bottom Statistics Bar */}
+      <div className="bg-white border-t border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                <span className="font-medium text-gray-900">{totalSections}</span> secciones
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                <span className="font-medium text-gray-900">{totalRows}</span> filas
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                <span className="font-medium text-gray-900">{totalSeats}</span> asientos
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                <span className="font-medium text-emerald-600">{availableSeats}</span> libres
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                <span className="font-medium text-violet-600">{occupiedSeats}</span> ocupados
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
