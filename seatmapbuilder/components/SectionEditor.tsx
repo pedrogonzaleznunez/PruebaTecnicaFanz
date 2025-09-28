@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Plus, Trash2, ChevronLeft } from "lucide-react"
+import { Plus, Trash2, ChevronLeft, Edit3 } from "lucide-react"
 import type { Section, Row, Seat } from "../lib/schema"
 import { generateFilaId, generateSeatId, extractSectionNumber } from "../lib/id-generator"
 import { SeatEditor } from "./SeatEditor"
@@ -19,6 +19,7 @@ interface SectionEditorProps {
   onRowSelectionChange: (rowIds: string[]) => void
   selectedSeats: number
   onMarkSelectedSeatsAs: (status: "available" | "occupied") => void
+  onDeleteSelectedSeats: (sectionId: string, rowId: string) => void
   onDeleteSection: () => void
   hasSelectedSection: boolean
   canvasCollapsed: boolean
@@ -33,10 +34,11 @@ export function SectionEditor({
   selectedRows,
   onRowSelectionChange,
   selectedSeats,
-  onMarkSelectedSeatsAs,
-  onDeleteSection,
-  hasSelectedSection,
-  canvasCollapsed
+  onMarkSelectedSeatsAs, 
+  onDeleteSelectedSeats,
+  onDeleteSection, 
+  hasSelectedSection, 
+  canvasCollapsed 
 }: SectionEditorProps) {
   const [newRowSeatCount, setNewRowSeatCount] = useState(10)
 
@@ -78,11 +80,18 @@ export function SectionEditor({
             >
               <ChevronLeft className={`h-4 w-4 transition-transform ${canvasCollapsed ? 'rotate-180' : ''}`} />
             </button>
-            <div>
+          <div>
               <h2 className="text-lg font-semibold text-gray-900">Editor de Sección</h2>
-        <p className="text-sm text-gray-600 mt-1">
-                Editando: <span className="font-medium text-gray-900">{section.label}</span>
-              </p>
+              <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                Editando: 
+                <input
+              value={section.label}
+              onChange={(e) => onUpdate(section.id, { label: e.target.value })}
+                  className="ml-1 font-medium text-gray-900 bg-transparent border-none outline-none focus:bg-white focus:border-b focus:border-blue-500 px-1 py-0.5 rounded"
+              placeholder="Nombre de la sección"
+            />
+                <Edit3 className="h-3 w-3 text-gray-400" />
+              </div>
             </div>
           </div>
           <Button
@@ -99,7 +108,7 @@ export function SectionEditor({
 
       {/* Basic Properties and Section Status - Side by Side */}
       <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
           {/* Basic Properties Card */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
             <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -107,42 +116,73 @@ export function SectionEditor({
               Propiedades básicas
             </h3>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre de la sección
-            </label>
-            <Input
-              value={section.label}
-              onChange={(e) => onUpdate(section.id, { label: e.target.value })}
-                  className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              placeholder="Nombre de la sección"
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ancho (px)
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Forma de la sección
               </label>
-              <Input
-                type="number"
-                value={section.width}
-                onChange={(e) => onUpdate(section.id, { width: parseInt(e.target.value) || 200 })}
-                    className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alto (px)
-              </label>
-              <Input
-                type="number"
-                value={section.height}
-                onChange={(e) => onUpdate(section.id, { height: parseInt(e.target.value) || 150 })}
-                    className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
+            <div className="grid grid-cols-2 gap-3">
+              {/* Rectángulo horizontal */}
+              <button
+                onClick={() => onUpdate(section.id, { width: 280, height: 160 })}
+                className={`p-3 border-2 rounded-lg transition-all duration-200 ${
+                  section.width === 280 && section.height === 160
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="w-full h-8 bg-gray-300 rounded flex items-center justify-center">
+                  <span className="text-xs text-gray-600">280×160</span>
                 </div>
-              </div>
+                <p className="text-xs text-gray-600 mt-2 text-center">Horizontal</p>
+              </button>
+
+              {/* Cuadrado */}
+              <button
+                onClick={() => onUpdate(section.id, { width: 200, height: 200 })}
+                className={`p-3 border-2 rounded-lg transition-all duration-200 ${
+                  section.width === 200 && section.height === 200
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="w-12 h-12 bg-gray-300 rounded mx-auto flex items-center justify-center">
+                  <span className="text-xs text-gray-600">200×200</span>
+                </div>
+                <p className="text-xs text-gray-600 mt-2 text-center">Cuadrado</p>
+              </button>
+
+              {/* Rectángulo vertical */}
+              <button
+                onClick={() => onUpdate(section.id, { width: 190, height: 320 })}
+                className={`p-3 border-2 rounded-lg transition-all duration-200 ${
+                  section.width === 190 && section.height === 320
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="w-8 h-12 bg-gray-300 rounded mx-auto flex items-center justify-center">
+                  <span className="text-xs text-gray-600">190×320</span>
+                </div>
+                <p className="text-xs text-gray-600 mt-2 text-center">Vertical</p>
+              </button>
+
+              {/* Rectángulo grande */}
+              <button
+                onClick={() => onUpdate(section.id, { width: 320, height: 200 })}
+                className={`p-3 border-2 rounded-lg transition-all duration-200 ${
+                  section.width === 320 && section.height === 200
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="w-full h-8 bg-gray-300 rounded flex items-center justify-center">
+                  <span className="text-xs text-gray-600">320×200</span>
+                </div>
+                <p className="text-xs text-gray-600 mt-2 text-center">Grande</p>
+              </button>
+            </div>
+          </div>
             </div>
           </div>
 
@@ -366,7 +406,10 @@ export function SectionEditor({
                             onUpdate(section.id, updatedSection)
                           }}
                           size="sm"
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm"
+                          className="text-white px-3 py-1 text-sm"
+                          style={{ backgroundColor: '#165dfc' }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0e4bc7'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#165dfc'}
                         >
                           Marcar como ocupados
                         </Button>
@@ -391,6 +434,14 @@ export function SectionEditor({
                           className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
                         >
                           Marcar como libres
+                        </Button>
+                        <Button
+                          onClick={() => onDeleteSelectedSeats(section.id, row.id)}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Eliminar
                         </Button>
                       </div>
                     </div>

@@ -33,12 +33,14 @@ export default function SeatMapBuilder() {
     }
   }, [canvasCollapsed])
 
-  // Listen for Escape key to deselect all
+  // Listen for Escape key to deselect all and Delete key to delete sections
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSelectedSections([])
         setSelectedSection(null)
+      } else if (event.key === 'Delete' && selectedSections.length > 0) {
+        deleteSelectedSections()
       }
     }
 
@@ -47,12 +49,13 @@ export default function SeatMapBuilder() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [selectedSections])
 
   // Confirmation dialogs
   const [confirmations, setConfirmations] = useState({
     deleteSections: false,
     deleteRow: false,
+    deleteSeats: false,
     clearMap: false
   })
   const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null)
@@ -196,6 +199,47 @@ export default function SeatMapBuilder() {
     updateSection(selectedSection, updatedSection)
   }
 
+  const deleteSelectedSeats = (sectionId: string, rowId: string) => {
+    const section = sections.find(s => s.id === sectionId)
+    if (!section) return
+
+    const row = section.rows.find(r => r.id === rowId)
+    if (!row) return
+
+    const selectedSeats = row.seats.filter(seat => seat.status === 'selected')
+    if (selectedSeats.length === 0) return
+
+    setPendingAction({ 
+      type: 'deleteSeats', 
+      data: { 
+        sectionId, 
+        rowId, 
+        seatCount: selectedSeats.length,
+        rowLabel: row.label
+      } 
+    })
+    setConfirmations(prev => ({ ...prev, deleteSeats: true }))
+  }
+
+  const performDeleteSeats = () => {
+    if (pendingAction?.type === 'deleteSeats' && pendingAction.data) {
+      const { sectionId, rowId } = pendingAction.data
+      const section = sections.find(s => s.id === sectionId)
+      if (section) {
+        const row = section.rows.find(r => r.id === rowId)
+        if (row) {
+          updateSection(sectionId, {
+            rows: section.rows.map(r =>
+              r.id === rowId
+                ? { ...r, seats: r.seats.filter(seat => seat.status !== 'selected') }
+                : r
+            )
+          })
+        }
+      }
+    }
+  }
+
   const addSection = (count = 1) => {
     const newSections: Section[] = []
     for (let i = 0; i < count; i++) {
@@ -280,6 +324,9 @@ export default function SeatMapBuilder() {
         break
       case 'deleteRow':
         performDeleteRow()
+        break
+      case 'deleteSeats':
+        performDeleteSeats()
         break
       case 'clearMap':
         performClearMap()
@@ -445,9 +492,10 @@ export default function SeatMapBuilder() {
             onRowSelectionChange={setSelectedRows}
             selectedSeats={selectedSeats}
             onMarkSelectedSeatsAs={markSelectedSeatsAs}
-            onDeleteSection={deleteSelectedSections}
-            hasSelectedSection={!!selectedSection}
-            canvasCollapsed={canvasCollapsed}
+             onDeleteSelectedSeats={deleteSelectedSeats}
+             onDeleteSection={deleteSelectedSections}
+             hasSelectedSection={!!selectedSection}
+             canvasCollapsed={canvasCollapsed}
           />
         </div>
       </div>
@@ -475,6 +523,18 @@ export default function SeatMapBuilder() {
         cancelText="Cancelar"
         variant="danger"
         details={["Esta acción no se puede deshacer", "Todos los asientos de esta fila también se eliminarán"]}
+      />
+
+      <ConfirmationDialog
+        open={confirmations.deleteSeats}
+        onClose={() => closeConfirmation('deleteSeats')}
+        onConfirm={() => handleConfirmation('deleteSeats')}
+        title="Confirmar eliminación de asientos"
+        message={`¿Estás seguro de que quieres borrar ${pendingAction?.data?.seatCount || 0} asiento${(pendingAction?.data?.seatCount || 0) > 1 ? 's' : ''} seleccionado${(pendingAction?.data?.seatCount || 0) > 1 ? 's' : ''}?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        details={["Esta acción no se puede deshacer", "Los asientos seleccionados se eliminarán permanentemente"]}
       />
 
       <ConfirmationDialog

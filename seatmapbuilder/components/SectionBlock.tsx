@@ -122,11 +122,11 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
           {/* Estadísticas compactas */}
           <div className="grid grid-cols-2 gap-2 mb-3 flex-shrink-0">
             <div className="text-center">
-              <div className="text-lg font-bold text-gray-900">{section.rows.length}</div>
+              <div className="text-sm font-semibold text-gray-900">{section.rows.length}</div>
               <div className="text-xs text-gray-500">filas</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-gray-900">{totalSeats}</div>
+              <div className="text-sm font-semibold text-gray-900">{totalSeats}</div>
               <div className="text-xs text-gray-500">asientos</div>
             </div>
           </div>
@@ -134,25 +134,33 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
           {/* Vista previa de asientos simplificada */}
           {section.rows.length > 0 && (
             <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
-              {section.rows.slice(0, 3).map((row, index) => (
-                <div key={row.id} className="flex justify-center gap-0.5">
-                  {row.seats.slice(0, 6).map((seat, seatIndex) => (
-                    <div
-                      key={seat.id}
-                      className={`w-1.5 h-1.5 rounded-sm ${
-                        seat.status === 'available' 
-                          ? 'bg-green-500' 
-                          : seat.status === 'occupied' 
-                          ? 'bg-red-500' 
-                          : 'bg-gray-300'
-                      }`}
-                    />
-                  ))}
-                  {row.seats.length > 6 && (
-                    <span className="text-xs text-gray-400 ml-1">+{row.seats.length - 6}</span>
-                  )}
-                </div>
-              ))}
+              {section.rows.slice(0, 3).map((row, index) => {
+                // Calcular cuántos asientos mostrar según el ancho de la sección
+                const maxSeatsToShow = Math.min(
+                  Math.floor((section.width - 24) / 8), // 8px por asiento (6px + 2px gap)
+                  row.seats.length
+                )
+                
+                return (
+                  <div key={row.id} className="flex justify-center gap-0.5">
+                    {row.seats.slice(0, maxSeatsToShow).map((seat, seatIndex) => (
+                      <div
+                        key={seat.id}
+                        className={`w-1.5 h-1.5 rounded-sm ${
+                          seat.status === 'available' 
+                            ? 'bg-green-500' 
+                            : seat.status === 'occupied' 
+                            ? 'bg-red-500' 
+                            : 'bg-gray-300'
+                        }`}
+                      />
+                    ))}
+                    {row.seats.length > maxSeatsToShow && (
+                      <span className="text-xs text-gray-400 ml-1">+{row.seats.length - maxSeatsToShow}</span>
+                    )}
+                  </div>
+                )
+              })}
               {section.rows.length > 3 && (
                 <div className="text-xs text-gray-400 text-center">
                   +{section.rows.length - 3} filas más
@@ -161,15 +169,17 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
             </div>
           )}
           
-          {/* Estado de asientos */}
-          <div className="flex justify-center gap-3 mt-2 text-xs flex-shrink-0">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-gray-600">{availableSeats}</span>
+          {/* Estado de asientos - Más prominente */}
+          <div className="flex justify-center gap-4 mt-3 text-sm flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="font-medium text-green-700">{availableSeats}</span>
+              <span className="text-xs text-gray-500">libres</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-gray-600">{occupiedSeats}</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span className="font-medium text-red-700">{occupiedSeats}</span>
+              <span className="text-xs text-gray-500">ocupados</span>
             </div>
           </div>
         </div>
