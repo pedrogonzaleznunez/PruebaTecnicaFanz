@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useCallback } from "react"
+import { useCallback, useState, useRef } from "react"
 import type { Section } from "../lib/schema"
 import { SectionBlock } from "./SectionBlock"
 
@@ -11,6 +11,7 @@ interface SectionCanvasProps {
   selectedSections: string[]
   onSectionSelect: (sectionId: string, event: React.MouseEvent) => void
   onSectionUpdate: (sectionId: string, updates: Partial<Section>) => void
+  onCreateStadium?: () => void
 }
 
 export function SectionCanvas({ 
@@ -18,23 +19,132 @@ export function SectionCanvas({
   selectedSectionId, 
   selectedSections,
   onSectionSelect, 
-  onSectionUpdate 
+  onSectionUpdate,
+  onCreateStadium
 }: SectionCanvasProps) {
   
-  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
-    // Si se hace click en el canvas vacío, deseleccionar
-    if (e.target === e.currentTarget) {
-      onSectionSelect('', e)
+  // Estados para box selection
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectionBox, setSelectionBox] = useState<{
+    startX: number
+    startY: number
+    endX: number
+    endY: number
+  } | null>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
+  
+  // Iniciar box selection
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Solo iniciar si no estamos haciendo click en una sección
+    const target = e.target as HTMLElement
+    const isClickingOnSection = target.closest('[data-section-id]')
+    
+    if (!isClickingOnSection && e.button === 0) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const startX = e.clientX - rect.left
+      const startY = e.clientY - rect.top
+      
+      setIsSelecting(true)
+      setSelectionBox({
+        startX,
+        startY,
+        endX: startX,
+        endY: startY
+      })
     }
-  }, [onSectionSelect])
+  }, [])
+
+  // Actualizar box selection
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isSelecting && selectionBox) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const endX = e.clientX - rect.left
+      const endY = e.clientY - rect.top
+      
+      setSelectionBox(prev => prev ? {
+        ...prev,
+        endX,
+        endY
+      } : null)
+    }
+  }, [isSelecting, selectionBox])
+
+  // Finalizar box selection
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (isSelecting && selectionBox) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const endX = e.clientX - rect.left
+      const endY = e.clientY - rect.top
+      
+      // Calcular el rectángulo de selección
+      const minX = Math.min(selectionBox.startX, endX)
+      const maxX = Math.max(selectionBox.startX, endX)
+      const minY = Math.min(selectionBox.startY, endY)
+      const maxY = Math.max(selectionBox.startY, endY)
+      
+      // Encontrar secciones dentro del rectángulo
+      const selectedSectionIds: string[] = []
+      sections.forEach(section => {
+        const sectionRight = section.x + section.width
+        const sectionBottom = section.y + section.height
+        
+        // Verificar si la sección intersecta con el rectángulo de selección
+        if (section.x < maxX && sectionRight > minX && 
+            section.y < maxY && sectionBottom > minY) {
+          selectedSectionIds.push(section.id)
+        }
+      })
+      
+      // Seleccionar las secciones encontradas
+      if (selectedSectionIds.length > 0) {
+        // Crear evento sintético para selección múltiple
+        const syntheticEvent = {
+          ...e,
+          metaKey: true,
+          ctrlKey: true,
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        } as React.MouseEvent
+        
+        // Seleccionar todas las secciones de una vez
+        selectedSectionIds.forEach(sectionId => {
+          onSectionSelect(sectionId, syntheticEvent)
+        })
+      } else {
+        // Si no hay secciones seleccionadas, deseleccionar todo
+        onSectionSelect('', e)
+      }
+      
+      setIsSelecting(false)
+      setSelectionBox(null)
+    }
+  }, [isSelecting, selectionBox, sections, onSectionSelect])
 
   return (
     <div className="h-full bg-gray-100">
+      {/* Botón Crear Estadio */}
+      {onCreateStadium && (
+        <div className="absolute top-4 left-4 z-10">
+          <button
+            onClick={onCreateStadium}
+            className="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Crear Estadio
+          </button>
+        </div>
+      )}
+      
       {/* Canvas principal */}
       <div 
+        ref={canvasRef}
         id="section-canvas"
         className="relative w-full h-full overflow-hidden bg-gray-100 p-8"
-        onClick={handleCanvasClick}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       >
         {/* Stadium background pattern */}
         <div 
@@ -59,9 +169,22 @@ export function SectionCanvas({
           />
         ))}
         
+        {/* Rectángulo de selección punteado */}
+        {isSelecting && selectionBox && (
+          <div
+            className="absolute border-2 border-dashed border-blue-500 bg-blue-100 bg-opacity-30 pointer-events-none"
+            style={{
+              left: Math.min(selectionBox.startX, selectionBox.endX),
+              top: Math.min(selectionBox.startY, selectionBox.endY),
+              width: Math.abs(selectionBox.endX - selectionBox.startX),
+              height: Math.abs(selectionBox.endY - selectionBox.startY),
+            }}
+          />
+        )}
+        
         {/* Escenario mejorado */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="w-80 h-20 bg-gradient-to-r from-gray-800 to-gray-900 border-2 border-gray-700 rounded-lg flex items-center justify-center shadow-2xl">
+          <div className="w-180 h-20 bg-gradient-to-r from-gray-800 to-gray-900 border-2 border-gray-700 rounded-lg flex items-center justify-center shadow-2xl">
             <span className="text-white font-bold text-xl tracking-wider">ESCENARIO</span>
           </div>
         </div>

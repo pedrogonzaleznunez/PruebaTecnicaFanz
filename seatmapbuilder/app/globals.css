@@ -65,7 +65,54 @@ html {
 /* Asegurar que toda la aplicación tenga el fondo correcto */
 #__next, 
 [data-nextjs-scroll-focus-boundary] {
-  background-color: #F9FAFB !important;
+  background-color: #F9FAFB;
+}
+
+/* Animaciones personalizadas para la pantalla de carga */
+@keyframes loading-bar {
+  0% { 
+    transform: translateX(-100%) scaleX(0.8); 
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateX(0%) scaleX(1); 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateX(100%) scaleX(0.8); 
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+/* Clases de utilidad para animaciones */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2s ease-in-out infinite;
 }
 
 /* Fondo para cualquier contenedor root */

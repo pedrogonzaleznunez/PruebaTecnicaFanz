@@ -203,22 +203,22 @@ export function SectionEditor({
                 <div className="text-xl font-bold text-gray-900">{totalSeats}</div>
                 <div className="text-xs text-gray-600">Asientos</div>
               </div>
-               <div className="text-center p-3 bg-emerald-50 rounded-lg">
-                 <div className="text-xl font-bold text-emerald-600">
-                   {section.rows.reduce((sum, row) => 
-                     sum + row.seats.filter(seat => seat.status === 'available').length, 0
-                   )}
-                 </div>
-                 <div className="text-xs text-emerald-600">Libres</div>
-               </div>
-               <div className="text-center p-3 bg-violet-50 rounded-lg">
-                 <div className="text-xl font-bold text-violet-600">
-                   {section.rows.reduce((sum, row) => 
-                     sum + row.seats.filter(seat => seat.status === 'occupied').length, 0
-                   )}
-                 </div>
-                 <div className="text-xs text-violet-600">Ocupados</div>
-               </div>
+                <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                  <div className="text-xl font-bold text-emerald-600">
+                    {section.rows.reduce((sum, row) => 
+                      sum + row.seats.filter(seat => seat.status === 'available').length, 0
+                    )}
+                  </div>
+                  <div className="text-xs text-emerald-600">Libres</div>
+                </div>
+                <div className="text-center p-3 bg-violet-50 rounded-lg">
+                  <div className="text-xl font-bold text-violet-600">
+                    {section.rows.reduce((sum, row) => 
+                      sum + row.seats.filter(seat => seat.status === 'occupied').length, 0
+                    )}
+                  </div>
+                  <div className="text-xs text-violet-600">Ocupados</div>
+                </div>
             </div>
           </div>
         </div>
@@ -235,15 +235,15 @@ export function SectionEditor({
             
             {/* Add Row Controls */}
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Asientos por fila:</span>
-            <Input
+              {/* <span className="text-sm font-medium text-gray-700">Asientos por fila:</span> */}
+            {/* <Input
               type="number"
               value={newRowSeatCount}
               onChange={(e) => setNewRowSeatCount(parseInt(e.target.value) || 10)}
                 className="w-20 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               min="1"
               max="50"
-            />
+            /> */}
             <Button
               onClick={() => onAddRow(section.id)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
@@ -366,15 +366,15 @@ export function SectionEditor({
                                   onUpdate(section.id, updatedSection)
                                 }
                               }}
-                               className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ${
-                                 seat.status === 'available' 
-                                   ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 focus:ring-2 focus:ring-emerald-300' 
-                                   : seat.status === 'occupied' 
-                                   ? 'bg-violet-100 text-violet-800 hover:bg-violet-200 focus:ring-2 focus:ring-violet-300'
-                                   : seat.status === 'selected'
-                                   ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-2 focus:ring-blue-300'
-                                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300'
-                               }`}
+                              className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ${
+                                seat.status === 'available' 
+                                  ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 focus:ring-2 focus:ring-emerald-300' 
+                                  : seat.status === 'occupied' 
+                                  ? 'bg-violet-100 text-violet-800 hover:bg-violet-200 focus:ring-2 focus:ring-violet-300'
+                                  : seat.status === 'selected'
+                                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-2 focus:ring-blue-300'
+                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300'
+                              }`}
                             >
                               {seat.label}
                             </button>

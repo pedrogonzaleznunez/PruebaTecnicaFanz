@@ -83,6 +83,7 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
   return (
     <div
       ref={blockRef}
+      data-section-id={section.id}
       className={`absolute cursor-move select-none transition-all duration-200 ${
         isSelected 
           ? 'ring-2 ring-blue-500 ring-offset-1' 

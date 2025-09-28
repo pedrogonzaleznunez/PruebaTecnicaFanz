@@ -10,6 +10,7 @@ import { SectionEditor } from "../components/SectionEditor"
 import type { Section, Row, Seat } from "../lib/schema"
 import { generateSectionId, generateFilaId, generateSeatId, extractSectionNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
+import { LoadingScreen } from "../components/LoadingScreen"
 
 export default function SeatMapBuilder() {
   const [sections, setSections] = useState<Section[]>([])
@@ -19,6 +20,16 @@ export default function SeatMapBuilder() {
   const [selectedSeats, setSelectedSeats] = useState(0)
   const [mapName, setMapName] = useState("")
   const [canvasCollapsed, setCanvasCollapsed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simular carga inicial de la aplicación
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000) // 2 segundos de carga
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Listen for canvas toggle events from SectionEditor
   useEffect(() => {
@@ -90,9 +101,19 @@ export default function SeatMapBuilder() {
         setSelectedSection(sectionId)
       }
     } else {
-      // Selección única
-      setSelectedSections([sectionId])
-      setSelectedSection(sectionId)
+      // Selección única - pero si ya hay selección múltiple, mantenerla
+      if (selectedSections.length > 1) {
+        // Si hay múltiples seleccionadas, agregar esta también
+        if (!selectedSections.includes(sectionId)) {
+          const newSelected = [...selectedSections, sectionId]
+          setSelectedSections(newSelected)
+          setSelectedSection(sectionId)
+        }
+      } else {
+        // Selección única normal
+        setSelectedSections([sectionId])
+        setSelectedSection(sectionId)
+      }
     }
   }
 
@@ -285,6 +306,70 @@ export default function SeatMapBuilder() {
     }
   }
 
+  const createStadium = () => {
+    // Limpiar secciones existentes
+    setSections([])
+    setSelectedSection(null)
+    setSelectedSections([])
+    
+    const newSections: Section[] = []
+    
+    // Dimensiones del canvas (aproximadas)
+    const canvasWidth = 1200 // Ancho total del canvas
+    const canvasHeight = 600 // Alto total del canvas
+    const spacing = 30
+    
+    // Dimensiones base
+    const centralWidth = 300  // Secciones centrales más anchas
+    const centralHeight = 200
+    const lateralWidth = 220  // Secciones laterales más altas
+    const lateralHeight = 250
+    
+    // Calcular el centro del canvas (donde está el escenario)
+    const centerX = canvasWidth / 2
+    
+    // Calcular posiciones para alinear con el centro del escenario
+    const totalWidth = (lateralWidth * 2) + (centralWidth * 2) + (spacing * 3) // 2 laterales + 2 centrales + 3 espacios
+    const startX = centerX - (totalWidth / 2) + 100 // Centrar todo el conjunto con el escenario
+    
+    // Crear 7 secciones en layout de estadio (6 tribunas + 1 campo central)
+    const sectionsConfig = [
+      // Sección 1 - Lateral izquierda superior
+      { x: startX, y: 80, width: lateralWidth, height: lateralHeight, label: "Tribuna Izquierda Superior" },
+      // Sección 2 - Central izquierda
+      { x: startX + lateralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Tribuna Central Izquierda" },
+      // Sección 3 - Central derecha
+      { x: startX + lateralWidth + spacing + centralWidth + spacing, y: 100, width: centralWidth, height: centralHeight, label: "Tribuna Central Derecha" },
+      // Sección 4 - Lateral derecha superior
+      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80, width: lateralWidth, height: lateralHeight, label: "Tribuna Derecha Superior" },
+      // Sección 5 - Campo Central (más cerca de las tribunas centrales)
+      { x: startX + lateralWidth + spacing, y: 100 + centralHeight + spacing + 50, width: centralWidth * 2 + spacing, height: centralHeight, label: "Campo Central" },
+      // Sección 6 - Lateral izquierda inferior
+      { x: startX, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Tribuna Izquierda Inferior" },
+      // Sección 7 - Lateral derecha inferior
+      { x: startX + lateralWidth + spacing + centralWidth + spacing + centralWidth + spacing, y: 80 + lateralHeight + spacing, width: lateralWidth, height: lateralHeight, label: "Tribuna Derecha Inferior" }
+    ]
+    
+    sectionsConfig.forEach((config, index) => {
+      const newSection: Section = {
+        id: generateSectionId(index + 1),
+        label: config.label,
+        x: config.x,
+        y: config.y,
+        width: config.width,
+        height: config.height,
+        rows: [],
+        selected: false,
+      }
+      newSections.push(newSection)
+    })
+    
+    setSections(newSections)
+    
+    // Auto-seleccionar la primera sección central
+    setSelectedSection(newSections[1].id) // Sección central izquierda
+  }
+
   const deleteSelectedSections = () => {
     if (selectedSections.length > 0) {
       setPendingAction({ type: 'deleteSections', data: { count: selectedSections.length } })
@@ -351,10 +436,15 @@ export default function SeatMapBuilder() {
   const occupiedSeats = sections.reduce((sum, section) => 
     sum + section.rows.reduce((rowSum, row) => 
       rowSum + row.seats.filter(s => s.status === "occupied").length, 0), 0)
+  // Mostrar pantalla de carga
+  if (isLoading) {
+    return <LoadingScreen message="Inicializando SeatMapBuilder..." />
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="border-b border-gray-200 shadow-sm" style={{ backgroundColor: '#e7f4fc' }}>
         <div className="flex items-center justify-between px-6 py-4">
           {/* Logo and title */}
           <div className="flex items-center gap-3">
@@ -475,6 +565,7 @@ export default function SeatMapBuilder() {
                selectedSections={selectedSections}
                onSectionSelect={handleSectionSelect}
             onSectionUpdate={updateSection}
+            onCreateStadium={createStadium}
           />
           )}
         </div>
