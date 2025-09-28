@@ -4,6 +4,11 @@
 
 Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeScript. Esta aplicación permite crear, editar y gestionar mapas de asientos para teatros, auditorios y otros espacios con múltiples plateas.
 
+## Vista principal
+![image](extra/public/mainview.png)
+
+![image](extra/public/mainview2.png)
+
 ## 🎯 Características Principales
 
 * **Constructor Visual**: Interfaz drag-and-drop para crear mapas de asientos
@@ -24,7 +29,7 @@ Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeS
 1. **Clonar el repositorio**
 
 ``` bash
-git clone https://github.com/tu-usuario/PruebaTecnicaFanz.git
+git clone https://github.com/pgonzaleznunez/PruebaTecnicaFanz.git
 cd PruebaTecnicaFanz
 ```
 
