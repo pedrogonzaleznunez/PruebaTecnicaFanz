@@ -1,4 +1,4 @@
-# Propms - Herramientas de Prompts
+# Prompts - Herramientas de Prompts
 
 Este directorio contiene herramientas para procesar y generar prompts a partir de conversaciones exportadas desde Cursor.
 
@@ -91,7 +91,7 @@ chmod +x run.sh
 
 ## 📝 Notas
 
-- El script siempre se ejecuta desde el directorio `propmts/`
+- El script siempre se ejecuta desde el directorio `prompts/`
 - Los archivos de entrada deben ser exportaciones de Cursor en formato Markdown
 - El archivo de salida `prompts.jsonl` se sobrescribe en cada ejecución
 

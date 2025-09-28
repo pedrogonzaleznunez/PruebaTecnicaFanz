@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "./ui/button"
 import { X } from "lucide-react"
+
+import { Button } from "@components/ui/button"
 
 interface FloatingSeatsPanelProps {
   selectedSeats: number

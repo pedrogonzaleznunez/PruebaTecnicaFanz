@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
 import { Plus, Trash2, Grid3X3, ChevronLeft, ChevronRight, Menu, Save, Edit3 } from "lucide-react"
-import { JsonManager } from "../components/JsonManager"
-import { SectionCanvas } from "../components/SectionCanvas"
-import { SectionEditor } from "../components/SectionEditor"
-import type { Section, Row, Seat } from "../lib/schema"
-import { generateSectionId, generateFilaId, generateSeatId, extractSectionNumber, extractFilaNumberFromFilaId } from "../lib/id-generator"
-import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
-import { LoadingScreen } from "../components/LoadingScreen"
+
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { ConfirmationDialog } from "@components/ui/confirmation-dialog"
+import { JsonManager } from "@components/JsonManager"
+import { SectionCanvas } from "@components/section/SectionCanvas"
+import { SectionEditor } from "@components/section/SectionEditor"
+import { LoadingScreen } from "@components/LoadingScreen"
+
+import type { Section, Row, Seat } from "@lib/schema"
+import { generateSectionId, generateFilaId, generateSeatId, extractSectionNumber, extractFilaNumberFromFilaId } from "@lib/id-generator"
 
 export default function SeatMapBuilder() {
   const [sections, setSections] = useState<Section[]>([])
