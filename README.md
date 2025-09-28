@@ -5,9 +5,9 @@
 Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeScript. Esta aplicación permite crear, editar y gestionar mapas de asientos para teatros, auditorios y otros espacios con múltiples plateas.
 
 ## Vista principal
-![image](extra/public/mainview.png)
+![FirstAppView](extra/public/mainview.png)
 
-![image](extra/public/mainview2.png)
+![SecondAppView](extra/public/mainview2.png)
 
 ## 🎯 Características Principales
 
