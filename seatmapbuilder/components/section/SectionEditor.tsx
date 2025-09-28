@@ -2,12 +2,14 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
 import { Plus, Trash2, ChevronLeft, Edit3 } from "lucide-react"
-import type { Section, Row, Seat } from "../lib/schema"
-import { generateFilaId, generateSeatId, extractSectionNumber } from "../lib/id-generator"
-import { SeatEditor } from "./SeatEditor"
+
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { SeatEditor } from "@components/seat/SeatEditor"
+
+import type { Section, Row, Seat } from "@lib/schema"
+import { generateFilaId, generateSeatId, extractSectionNumber } from "@lib/id-generator"
 
 interface SectionEditorProps {
   section: Section | null

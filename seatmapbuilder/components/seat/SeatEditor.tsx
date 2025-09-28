@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState, useRef, useCallback } from "react"
-import type { Section, Row, Seat as SeatType } from "../lib/schema"
-import { Seat } from "./Seat"
-import { FloatingSeatsPanel } from "./FloatingSeatsPanel"
+
+import type { Section, Row, Seat as SeatType } from "@lib/schema"
+import { Seat } from "@components/seat/Seat"
+import { FloatingSeatsPanel } from "@components/seat/FloatingSeatsPanel"
 
 interface SeatEditorProps {
   section: Section

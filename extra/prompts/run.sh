@@ -23,7 +23,7 @@ CHAT_FILE="$SCRIPT_DIR/$CHAT_NAME"
 # Verificar que el archivo existe
 if [ ! -f "$CHAT_FILE" ]; then
     echo "Error: El archivo '$CHAT_FILE' no existe"
-    echo "Archivos disponibles en propmts/:"
+    echo "Archivos disponibles en prompts/:"
     ls -la "$SCRIPT_DIR/"*.md 2>/dev/null || echo "No se encontraron archivos .md"
     exit 1
 fi

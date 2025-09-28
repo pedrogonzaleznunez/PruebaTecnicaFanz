@@ -2,8 +2,9 @@
 
 import type React from "react"
 import { useCallback, useState, useRef } from "react"
-import type { Section } from "../lib/schema"
-import { SectionBlock } from "./SectionBlock"
+
+import type { Section } from "@lib/schema"
+import { SectionBlock } from "@components/section/SectionBlock"
 
 interface SectionCanvasProps {
   sections: Section[]

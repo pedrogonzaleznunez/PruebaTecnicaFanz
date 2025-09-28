@@ -2,14 +2,16 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { Label } from "./ui/label"
-import { Badge } from "./ui/badge"
-import { Textarea } from "./ui/textarea"
 import { Download, Upload, FileText, Copy, X } from "lucide-react"
-import type { Platea, SeatMap } from "../lib/schema"
-import { ConfirmationDialog } from "./ui/confirmation-dialog"
+
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Label } from "@components/ui/label"
+import { Badge } from "@components/ui/badge"
+import { Textarea } from "@components/ui/textarea"
+import { ConfirmationDialog } from "@components/ui/confirmation-dialog"
+
+import type { Platea, SeatMap } from "@lib/schema"
 
 interface JsonManagerProps {
   plateas: Platea[]

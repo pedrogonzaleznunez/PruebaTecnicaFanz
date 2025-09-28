@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useState, useRef, useCallback } from "react"
-import type { Platea, Row, Seat as SeatType } from "../lib/schema"
-import { Seat } from "./Seat"
-import { FloatingSeatsPanel } from "./FloatingSeatsPanel"
+
+import type { Platea, Row, Seat as SeatType } from "@lib/schema"
+import { Seat } from "@components/seat/Seat"
+import { FloatingSeatsPanel } from "@components/seat/FloatingSeatsPanel"
 
 interface SeatCanvasProps {
   plateas: Platea[]

@@ -24,7 +24,16 @@
     "incremental": true,
     "types": [
       "node"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@components/*": ["./components/*"],
+      "@lib/*": ["./lib/*"],
+      "@hooks/*": ["./hooks/*"],
+      "@utils/*": ["./utils/*"],
+      "@app/*": ["./app/*"]
+    }
   },
   "include": [
     "**/*.ts",

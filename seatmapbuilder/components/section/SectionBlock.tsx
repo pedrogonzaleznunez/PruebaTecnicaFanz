@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState, useRef, useCallback } from "react"
-import type { Section } from "../lib/schema"
+
+import type { Section } from "@lib/schema"
 
 interface SectionBlockProps {
   section: Section
