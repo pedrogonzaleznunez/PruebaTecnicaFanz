@@ -356,70 +356,73 @@ export default function SeatMapBuilder() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between px-6 py-4">
-          {/* Logo, title and map name */}
-          <div className="flex items-center gap-6">
+          {/* Logo and title */}
           <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-600">
+            <div className="p-2 rounded-lg bg-blue-600">
               <Grid3X3 className="h-5 w-5 text-white" />
             </div>
             <div>
-                <h1 className="text-xl font-semibold text-gray-900">SeatMapBuilder</h1>
-                <p className="text-sm text-gray-500">Editor de mapas de asientos</p>
-              </div>
+              <h1 className="text-xl font-semibold text-gray-900">SeatMapBuilder</h1>
+              <p className="text-sm text-gray-500">Editor de mapas de asientos</p>
             </div>
-            
+          </div>
+
+          {/* Centered content */}
+          <div className="flex items-center gap-4">
             {/* Map name input */}
-              <div className="relative">
-                <Input
-                  placeholder="Nombre del mapa"
-                  value={mapName}
-                  onChange={(e) => setMapName(e.target.value)}
+            <div className="relative">
+              <Input
+                placeholder="Nombre del mapa"
+                value={mapName}
+                onChange={(e) => setMapName(e.target.value)}
                 className="bg-white border-gray-300 text-gray-700 placeholder:text-gray-400 rounded-lg text-sm w-48 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
-              </div>
+            </div>
             
             {/* Secondary actions */}
             <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              onClick={clearMap}
+              <Button 
+                variant="outline" 
+                onClick={clearMap}
                 className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-md transition-all duration-200"
-            >
+              >
                 <Plus className="h-4 w-4 mr-2" />
-              Nuevo mapa
-            </Button>
+                Nuevo mapa
+              </Button>
               
-            <JsonManager
+              <JsonManager
                 plateas={sections}
                 onPlateaChange={setSections}
-              mapName={mapName}
-              onMapNameChange={setMapName}
-              onClearMap={clearMap}
-            />
+                mapName={mapName}
+                onMapNameChange={setMapName}
+                onClearMap={clearMap}
+              />
+            </div>
           </div>
-        </div>
-        
+
            {/* Primary actions - Add section and Delete sections */}
-          <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => addSection(1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar sección
-          </Button>
-            
-            {selectedSections.length > 0 && (
-                <Button
-                  onClick={deleteSelectedSections}
-                className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm px-4 py-2"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Eliminar {selectedSections.length > 1 ? 'secciones' : 'sección'}
-                </Button>
-          )}
+           <div className="flex items-center gap-3 min-w-[200px] justify-end">
+             <Button 
+               onClick={() => addSection(1)}
+               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
+             >
+               <Plus className="h-4 w-4 mr-2" />
+               Agregar sección
+             </Button>
+             
+             <div className="min-w-[140px]">
+               {selectedSections.length > 0 && (
+                 <Button 
+                   onClick={deleteSelectedSections}
+                   className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm px-4 py-2"
+                 >
+                   <Trash2 className="h-4 w-4 mr-2" />
+                   Eliminar {selectedSections.length > 1 ? 'secciones' : 'sección'}
+                 </Button>
+               )}
+             </div>
+           </div>
         </div>
-          </div>
       </header>
 
       {/* Statistics bar */}
