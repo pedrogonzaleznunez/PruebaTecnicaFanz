@@ -148,9 +148,9 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
                         key={seat.id}
                         className={`w-1.5 h-1.5 rounded-sm ${
                           seat.status === 'available' 
-                            ? 'bg-green-500' 
+                            ? 'bg-emerald-500' 
                             : seat.status === 'occupied' 
-                            ? 'bg-red-500' 
+                            ? 'bg-violet-500' 
                             : 'bg-gray-300'
                         }`}
                       />
@@ -172,13 +172,13 @@ export function SectionBlock({ section, isSelected, isMultiSelected, onSelect, o
           {/* Estado de asientos - Más prominente */}
           <div className="flex justify-center gap-4 mt-3 text-sm flex-shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="font-medium text-green-700">{availableSeats}</span>
+              <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+              <span className="font-medium text-emerald-700">{availableSeats}</span>
               <span className="text-xs text-gray-500">libres</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="font-medium text-red-700">{occupiedSeats}</span>
+              <div className="w-3 h-3 bg-violet-500 rounded-full"></div>
+              <span className="font-medium text-violet-700">{occupiedSeats}</span>
               <span className="text-xs text-gray-500">ocupados</span>
             </div>
           </div>

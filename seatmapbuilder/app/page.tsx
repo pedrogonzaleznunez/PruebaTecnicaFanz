@@ -370,57 +370,55 @@ export default function SeatMapBuilder() {
           {/* Centered content */}
           <div className="flex items-center gap-4">
             {/* Map name input */}
-            <div className="relative">
-              <Input
-                placeholder="Nombre del mapa"
-                value={mapName}
-                onChange={(e) => setMapName(e.target.value)}
+              <div className="relative">
+                <Input
+                  placeholder="Nombre del mapa"
+                  value={mapName}
+                  onChange={(e) => setMapName(e.target.value)}
                 className="bg-white border-gray-300 text-gray-700 placeholder:text-gray-400 rounded-lg text-sm w-48 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             
             {/* Secondary actions */}
             <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                onClick={clearMap}
+            <Button 
+              variant="outline" 
+              onClick={clearMap}
                 className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-300 rounded-2xl shadow-md transition-all duration-200"
-              >
+            >
                 <Plus className="h-4 w-4 mr-2" />
-                Nuevo mapa
-              </Button>
+              Nuevo mapa
+            </Button>
               
-              <JsonManager
+            <JsonManager
                 plateas={sections}
                 onPlateaChange={setSections}
-                mapName={mapName}
-                onMapNameChange={setMapName}
-                onClearMap={clearMap}
-              />
-            </div>
+              mapName={mapName}
+              onMapNameChange={setMapName}
+              onClearMap={clearMap}
+            />
           </div>
-
+        </div>
+        
            {/* Primary actions - Add section and Delete sections */}
-           <div className="flex items-center gap-3 min-w-[200px] justify-end">
-             <Button 
-               onClick={() => addSection(1)}
-               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
-             >
-               <Plus className="h-4 w-4 mr-2" />
-               Agregar sección
-             </Button>
+           <div className="flex items-center gap-3 justify-end">
+             {selectedSections.length > 0 && (
+               <Button 
+                 onClick={deleteSelectedSections}
+                 className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm px-4 py-2"
+               >
+                 <Trash2 className="h-4 w-4 mr-2" />
+                 Eliminar {selectedSections.length > 1 ? 'secciones' : 'sección'}
+               </Button>
+             )}
              
-             <div className="min-w-[140px]">
-               {selectedSections.length > 0 && (
-                 <Button 
-                   onClick={deleteSelectedSections}
-                   className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm px-4 py-2"
-                 >
-                   <Trash2 className="h-4 w-4 mr-2" />
-                   Eliminar {selectedSections.length > 1 ? 'secciones' : 'sección'}
-                 </Button>
-               )}
-             </div>
+          <Button 
+            onClick={() => addSection(1)}
+               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm px-4 py-2"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar sección
+          </Button>
            </div>
         </div>
       </header>
@@ -456,9 +454,9 @@ export default function SeatMapBuilder() {
               </span>
                 </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
               <span className="text-sm text-gray-600">
-                <span className="font-medium text-red-600">{occupiedSeats}</span> ocupados
+                <span className="font-medium text-violet-600">{occupiedSeats}</span> ocupados
               </span>
                 </div>
               </div>

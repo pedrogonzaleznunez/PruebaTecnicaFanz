@@ -94,16 +94,18 @@ export function SectionEditor({
               </div>
             </div>
           </div>
-          <Button
-            onClick={onDeleteSection}
-            size="sm"
-            variant="outline"
-            className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {hasSelectedSection && (
+            <Button
+              onClick={onDeleteSection}
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-      </div>
+          </div>
 
 
       {/* Basic Properties and Section Status - Side by Side */}
@@ -178,18 +180,18 @@ export function SectionEditor({
               >
                 <div className="w-full h-8 bg-gray-300 rounded flex items-center justify-center">
                   <span className="text-xs text-gray-600">320×200</span>
-                </div>
+            </div>
                 <p className="text-xs text-gray-600 mt-2 text-center">Grande</p>
               </button>
             </div>
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
           {/* Section Statistics Card */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
             <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Estado de la sección
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -201,22 +203,22 @@ export function SectionEditor({
                 <div className="text-xl font-bold text-gray-900">{totalSeats}</div>
                 <div className="text-xs text-gray-600">Asientos</div>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-xl font-bold text-green-600">
-                  {section.rows.reduce((sum, row) => 
-                    sum + row.seats.filter(seat => seat.status === 'available').length, 0
-                  )}
-                </div>
-                <div className="text-xs text-green-600">Libres</div>
-              </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-xl font-bold text-red-600">
-                  {section.rows.reduce((sum, row) => 
-                    sum + row.seats.filter(seat => seat.status === 'occupied').length, 0
-                  )}
-                </div>
-                <div className="text-xs text-red-600">Ocupados</div>
-              </div>
+               <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                 <div className="text-xl font-bold text-emerald-600">
+                   {section.rows.reduce((sum, row) => 
+                     sum + row.seats.filter(seat => seat.status === 'available').length, 0
+                   )}
+                 </div>
+                 <div className="text-xs text-emerald-600">Libres</div>
+               </div>
+               <div className="text-center p-3 bg-violet-50 rounded-lg">
+                 <div className="text-xl font-bold text-violet-600">
+                   {section.rows.reduce((sum, row) => 
+                     sum + row.seats.filter(seat => seat.status === 'occupied').length, 0
+                   )}
+                 </div>
+                 <div className="text-xs text-violet-600">Ocupados</div>
+               </div>
             </div>
           </div>
         </div>
@@ -227,7 +229,7 @@ export function SectionEditor({
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Gestión de Filas y Asientos
             </h3>
             
@@ -291,42 +293,61 @@ export function SectionEditor({
                       <div className="text-sm font-medium text-gray-700 mb-2">Asientos (click para seleccionar):</div>
                       <div className="flex flex-wrap gap-1">
                         {row.seats.map((seat, seatIndex) => (
-                          <button
-                            key={seat.id}
-                            onClick={(e) => {
-                              const isMultiSelect = e.metaKey || e.ctrlKey
-                              
-                              if (isMultiSelect) {
-                                // Selección por rango
-                                const selectedSeats = row.seats.filter(s => s.status === 'selected')
-                                if (selectedSeats.length > 0) {
-                                  // Encontrar el primer asiento seleccionado
-                                  const firstSelectedIndex = row.seats.findIndex(s => s.status === 'selected')
-                                  const currentIndex = seatIndex
-                                  
-                                  // Determinar el rango
-                                  const startIndex = Math.min(firstSelectedIndex, currentIndex)
-                                  const endIndex = Math.max(firstSelectedIndex, currentIndex)
-                                  
-                                  // Seleccionar todos los asientos en el rango
-                                  const updatedSection = {
-                                    ...section,
-                                    rows: section.rows.map(r => 
-                                      r.id === row.id 
-                                        ? {
-                                            ...r,
-                                            seats: r.seats.map((s, index) => 
-                                              index >= startIndex && index <= endIndex
-                                                ? { ...s, status: 'selected' as const }
-                                                : s
-                                            )
-                                          }
-                                        : r
-                                    )
+                          <div key={seat.id} className="relative group">
+                            <button
+                              onClick={(e) => {
+                                const isMultiSelect = e.metaKey || e.ctrlKey
+                                
+                                if (isMultiSelect) {
+                                  // Selección por rango
+                                  const selectedSeats = row.seats.filter(s => s.status === 'selected')
+                                  if (selectedSeats.length > 0) {
+                                    // Encontrar el primer asiento seleccionado
+                                    const firstSelectedIndex = row.seats.findIndex(s => s.status === 'selected')
+                                    const currentIndex = seatIndex
+                                    
+                                    // Determinar el rango
+                                    const startIndex = Math.min(firstSelectedIndex, currentIndex)
+                                    const endIndex = Math.max(firstSelectedIndex, currentIndex)
+                                    
+                                    // Seleccionar todos los asientos en el rango
+                                    const updatedSection = {
+                                      ...section,
+                                      rows: section.rows.map(r => 
+                                        r.id === row.id 
+                                          ? {
+                                              ...r,
+                                              seats: r.seats.map((s, index) => 
+                                                index >= startIndex && index <= endIndex
+                                                  ? { ...s, status: 'selected' as const }
+                                                  : s
+                                              )
+                                            }
+                                          : r
+                                      )
+                                    }
+                                    onUpdate(section.id, updatedSection)
+                                  } else {
+                                    // Si no hay asientos seleccionados, seleccionar solo este
+                                    const updatedSection = {
+                                      ...section,
+                                      rows: section.rows.map(r => 
+                                        r.id === row.id 
+                                          ? {
+                                              ...r,
+                                              seats: r.seats.map(s => 
+                                                s.id === seat.id 
+                                                  ? { ...s, status: 'selected' as const }
+                                                  : s
+                                              )
+                                            }
+                                          : r
+                                      )
+                                    }
+                                    onUpdate(section.id, updatedSection)
                                   }
-                                  onUpdate(section.id, updatedSection)
                                 } else {
-                                  // Si no hay asientos seleccionados, seleccionar solo este
+                                  // Toggle seat selection normal
                                   const updatedSection = {
                                     ...section,
                                     rows: section.rows.map(r => 
@@ -335,7 +356,7 @@ export function SectionEditor({
                                             ...r,
                                             seats: r.seats.map(s => 
                                               s.id === seat.id 
-                                                ? { ...s, status: 'selected' as const }
+                                                ? { ...s, status: s.status === 'selected' ? 'available' as const : 'selected' as const }
                                                 : s
                                             )
                                           }
@@ -344,38 +365,28 @@ export function SectionEditor({
                                   }
                                   onUpdate(section.id, updatedSection)
                                 }
-                              } else {
-                                // Toggle seat selection normal
-                                const updatedSection = {
-                                  ...section,
-                                  rows: section.rows.map(r => 
-                                    r.id === row.id 
-                                      ? {
-                                          ...r,
-                                          seats: r.seats.map(s => 
-                                            s.id === seat.id 
-                                              ? { ...s, status: s.status === 'selected' ? 'available' as const : 'selected' as const }
-                                              : s
-                                          )
-                                        }
-                                      : r
-                                  )
-                                }
-                                onUpdate(section.id, updatedSection)
-                              }
-                            }}
-                            className={`px-2 py-1 text-xs rounded cursor-pointer transition-colors ${
-                              seat.status === 'available' 
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                : seat.status === 'occupied' 
-                                ? 'bg-red-100 text-red-800 hover:bg-red-200'
-                                : seat.status === 'selected'
-                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`}
-                          >
-                            {seat.label}
-                          </button>
+                              }}
+                               className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ${
+                                 seat.status === 'available' 
+                                   ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 focus:ring-2 focus:ring-emerald-300' 
+                                   : seat.status === 'occupied' 
+                                   ? 'bg-violet-100 text-violet-800 hover:bg-violet-200 focus:ring-2 focus:ring-violet-300'
+                                   : seat.status === 'selected'
+                                   ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-2 focus:ring-blue-300'
+                                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300'
+                               }`}
+                            >
+                              {seat.label}
+                            </button>
+                            
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                              {seat.status === 'available' ? 'Libre' : 
+                               seat.status === 'occupied' ? 'Ocupado' : 
+                               seat.status === 'selected' ? 'Seleccionado' : 'Sin etiqueta'}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -388,57 +399,54 @@ export function SectionEditor({
                         Asientos seleccionados: {row.seats.filter(seat => seat.status === 'selected').length}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => {
-                            const updatedSection = {
-                              ...section,
-                              rows: section.rows.map(r => 
-                                r.id === row.id 
-                                  ? {
-                                      ...r,
-                                      seats: r.seats.map(s => 
-                                        s.status === 'selected' ? { ...s, status: 'occupied' as const } : s
-                                      )
-                                    }
-                                  : r
-                              )
-                            }
-                            onUpdate(section.id, updatedSection)
-                          }}
-                          size="sm"
-                          className="text-white px-3 py-1 text-sm"
-                          style={{ backgroundColor: '#165dfc' }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0e4bc7'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#165dfc'}
-                        >
-                          Marcar como ocupados
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            const updatedSection = {
-                              ...section,
-                              rows: section.rows.map(r => 
-                                r.id === row.id 
-                                  ? {
-                                      ...r,
-                                      seats: r.seats.map(s => 
-                                        s.status === 'selected' ? { ...s, status: 'available' as const } : s
-                                      )
-                                    }
-                                  : r
-                              )
-                            }
-                            onUpdate(section.id, updatedSection)
-                          }}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
-                        >
-                          Marcar como libres
-                        </Button>
+                         <Button
+                           onClick={() => {
+                             const updatedSection = {
+                               ...section,
+                               rows: section.rows.map(r => 
+                                 r.id === row.id 
+                                   ? {
+                                       ...r,
+                                       seats: r.seats.map(s => 
+                                         s.status === 'selected' ? { ...s, status: 'occupied' as const } : s
+                                       )
+                                     }
+                                   : r
+                               )
+                             }
+                             onUpdate(section.id, updatedSection)
+                           }}
+                           size="sm"
+                           className="bg-violet-600 hover:bg-violet-700 focus:ring-2 focus:ring-violet-300 disabled:bg-violet-300 disabled:cursor-not-allowed text-white px-3 py-1 text-sm font-medium transition-all duration-200"
+                         >
+                           Marcar como ocupados
+                         </Button>
+                         <Button
+                           onClick={() => {
+                             const updatedSection = {
+                               ...section,
+                               rows: section.rows.map(r => 
+                                 r.id === row.id 
+                                   ? {
+                                       ...r,
+                                       seats: r.seats.map(s => 
+                                         s.status === 'selected' ? { ...s, status: 'available' as const } : s
+                                       )
+                                     }
+                                   : r
+                               )
+                             }
+                             onUpdate(section.id, updatedSection)
+                           }}
+                           size="sm"
+                           className="bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-300 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-3 py-1 text-sm font-medium transition-all duration-200"
+                         >
+                           Marcar como libres
+                         </Button>
                         <Button
                           onClick={() => onDeleteSelectedSeats(section.id, row.id)}
                           size="sm"
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm"
+                          className="bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-300 disabled:bg-red-300 disabled:cursor-not-allowed text-white px-3 py-1 text-sm font-medium transition-all duration-200"
                         >
                           <Trash2 className="h-3 w-3 mr-1" />
                           Eliminar
@@ -455,21 +463,21 @@ export function SectionEditor({
                         <Button
                           onClick={() => onAddSeats(section.id, row.id, 1)}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm"
                         >
                           +1
                         </Button>
                         <Button
                           onClick={() => onAddSeats(section.id, row.id, 5)}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm"
                         >
                           +5
                         </Button>
                         <Button
                           onClick={() => onAddSeats(section.id, row.id, 10)}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm"
                         >
                           +10
                   </Button>
