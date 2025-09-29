@@ -66,11 +66,11 @@ El script genera un archivo `prompts.jsonl` donde cada línea es un objeto JSON 
 
 ```json
 {
-  "role": "user|assistant",
-  "content": "Contenido del mensaje",
-  "timestamp": "2025-01-27T19:00:00Z",
-  "purpose": "Descripción inferida del propósito"
-}
+  "timestamp": "2025-09-28T17:35:44-03:00", 
+  "tool": "ChatGPT (gpt-5)", 
+  "purpose": "", 
+  "prompt": "Quiero que la posicion del boton cuando el panel esta extendido, sea otra", 
+  "notes": "role: User; block_index: 13"}
 ```
 
 ## 🐛 Solución de Problemas

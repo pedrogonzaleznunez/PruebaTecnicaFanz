@@ -18,7 +18,6 @@ Un constructor de mapas de asientos interactivo desarrollado con Next.js y TypeS
 * **Selección Masiva**: Herramientas para seleccionar y modificar múltiples asientos
 * **Estadio Prearmado**: Función para cargar un layout de estadio predefinido
 * **Interfaz Moderna**: Diseño limpio con cuadrícula sutil y colores accesibles
-* **Responsive**: Interfaz adaptable con paneles colapsables
 
 ## 🚀 Instalación
 
@@ -107,7 +106,6 @@ npm run dev          # Ejecuta el proyecto en modo desarrollo
 │   ├── generate_prompts.py   # Script para generar prompts
 │   ├── chat.md               # Historial de conversaciones
 │   ├── README.md             # Explicación sobre script generador de prompts 
-│   ├── prompts.jsonl         # Prompts en formato JSONL
 │   ├── promptsV1.jsonl       # Prompts en formato JSONL de la versión 1.X
 │   ├── promptsV2.jsonl       # Prompts en formato JSONL de la versión 2.X
 │   └── run.sh                # Script para ejecutar el procesamiento

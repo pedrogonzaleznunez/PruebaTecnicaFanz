@@ -75,7 +75,6 @@ def main():
     p = argparse.ArgumentParser(description="Convert Cursor-exported .md -> prompts.jsonl")
     p.add_argument('input', help='archivo markdown exportado (ej: history.md)')
     p.add_argument('output', help='salida jsonl (ej: prompts.jsonl)')
-    p.add_argument('--include-assistant', action='store_true', help='incluir mensajes del assistant/cursor')
     p.add_argument('--infer-purpose', action='store_true', help='intentar inferir el campo "purpose" automáticamente')
     args = p.parse_args()
 
@@ -86,16 +85,17 @@ def main():
     entries = []
     for idx, (role, content) in enumerate(blocks, start=1):
         norm = normalize_role(role)
-        if norm == 'assistant' and not args.include_assistant:
+        # Siempre ignorar mensajes del assistant/IA
+        if norm == 'assistant':
             continue
         timestamp = export_ts  # el export generalmente no trae timestamps por mensaje; use el del export
-        tool_model = f"cursor ({norm})"
+        tool_value = "ChatGPT (gpt-5)"
         prompt = content
         purpose = infer_purpose(content) if args.infer_purpose else ""
         notes = f"role: {role}; block_index: {idx}"
         entry = {
             "timestamp": timestamp,
-            "tool/model": tool_model,
+            "tool": tool_value,
             "purpose": purpose,
             "prompt": prompt,
             "notes": notes
