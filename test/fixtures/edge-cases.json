@@ -1,0 +1,42 @@
+{
+  "name": "Edge Cases Test",
+  "plateas": [
+    {
+      "id": "platea-empty",
+      "label": "Empty Platea",
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 100,
+      "rows": []
+    },
+    {
+      "id": "platea-single-seat",
+      "label": "Single Seat",
+      "x": 200,
+      "y": 200,
+      "width": 50,
+      "height": 50,
+      "rows": [
+        {
+          "id": "row-single",
+          "label": "Single Row",
+          "seats": [
+            {
+              "id": "seat-single",
+              "label": "S1",
+              "status": "available",
+              "x": 210,
+              "y": 210,
+              "meta": {
+                "customField": "test",
+                "number": 42,
+                "boolean": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "cd ../test && npm test",
+    "test:run": "cd ../test && npm run test:run",
+    "test:json": "cd ../test && npm run test:json",
+    "test:schema": "cd ../test && npm run test:schema"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

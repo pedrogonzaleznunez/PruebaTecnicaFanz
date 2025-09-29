@@ -1,0 +1,93 @@
+{
+  "name": "Teatro Principal",
+  "plateas": [
+    {
+      "id": "platea-1",
+      "label": "Platea A",
+      "x": 100,
+      "y": 200,
+      "width": 300,
+      "height": 200,
+      "rows": [
+        {
+          "id": "row-1",
+          "label": "Fila 1",
+          "seats": [
+            {
+              "id": "seat-1",
+              "label": "A1",
+              "status": "available",
+              "x": 120,
+              "y": 220
+            },
+            {
+              "id": "seat-2",
+              "label": "A2",
+              "status": "occupied",
+              "x": 150,
+              "y": 220
+            },
+            {
+              "id": "seat-3",
+              "label": "A3",
+              "status": "available",
+              "x": 180,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "row-2",
+          "label": "Fila 2",
+          "seats": [
+            {
+              "id": "seat-4",
+              "label": "B1",
+              "status": "available",
+              "x": 120,
+              "y": 250
+            },
+            {
+              "id": "seat-5",
+              "label": "B2",
+              "status": "unlabeled",
+              "x": 150,
+              "y": 250
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platea-2",
+      "label": "Platea B",
+      "x": 500,
+      "y": 200,
+      "width": 250,
+      "height": 180,
+      "rows": [
+        {
+          "id": "row-3",
+          "label": "Fila 1",
+          "seats": [
+            {
+              "id": "seat-6",
+              "label": "C1",
+              "status": "selected",
+              "x": 520,
+              "y": 220
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "createdAt": "2025-01-27T19:00:00Z",
+  "version": "1.0.0",
+  "metadata": {
+    "totalPlateas": 2,
+    "totalRows": 3,
+    "totalSeats": 6,
+    "exportedBy": "SeatMapBuilder"
+  }
+}

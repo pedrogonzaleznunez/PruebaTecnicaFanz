@@ -1,0 +1,28 @@
+{
+  "name": "",
+  "plateas": [
+    {
+      "id": "",
+      "label": "Platea A",
+      "x": "invalid",
+      "y": 200,
+      "width": 300,
+      "height": 200,
+      "rows": [
+        {
+          "id": "row-1",
+          "label": "",
+          "seats": [
+            {
+              "id": "seat-1",
+              "label": "A1",
+              "status": "invalid-status",
+              "x": 120,
+              "y": "invalid"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

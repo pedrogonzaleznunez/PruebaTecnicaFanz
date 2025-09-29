@@ -111,6 +111,16 @@ npm run dev          # Ejecuta el proyecto en modo desarrollo
 │   ├── promptsV1.jsonl       # Prompts en formato JSONL de la versión 1.X
 │   ├── promptsV2.jsonl       # Prompts en formato JSONL de la versión 2.X
 │   └── run.sh                # Script para ejecutar el procesamiento
+├── test/                     # Suite de testing para validación JSON
+│   ├── package.json          # Configuración de dependencias de testing
+│   ├── vitest.config.ts      # Configuración de Vitest
+│   ├── README.md             # Documentación de testing
+│   ├── fixtures/             # Archivos JSON de prueba
+│   │   ├── valid-seatmap.json    # JSON válido completo
+│   │   ├── invalid-seatmap.json  # JSON con errores
+│   │   └── edge-cases.json       # Casos límite
+│   ├── json-validation.test.ts   # Tests de validación JSON
+│   └── schema-validation.test.ts # Tests de esquemas Zod
 └── README.md                 # Este archivo
 ```
 
@@ -212,6 +222,28 @@ El mapa de asientos se almacena en formato JSON con la siguiente estructura:
 
 
 ```
+
+## 🧪 Testing
+
+### Suite de Validación JSON
+El proyecto incluye una suite completa de testing para validar la estructura y formato de los archivos JSON:
+
+```bash
+# Ejecutar todos los tests
+cd test/
+npm test
+
+# Tests específicos
+npm run test:json      # Validación de archivos JSON
+npm run test:schema    # Validación de esquemas Zod
+```
+
+### Cobertura de Tests
+- ✅ **Validación positiva**: Archivos JSON válidos
+- ✅ **Validación negativa**: Archivos con errores
+- ✅ **Casos límite**: Valores extremos y vacíos
+- ✅ **Esquemas Zod**: Seat, Row, Platea, SeatMap
+- ✅ **Integridad de datos**: Consistencia después de validación
 
 ## 🧪 Extra
 

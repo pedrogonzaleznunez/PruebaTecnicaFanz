@@ -1,0 +1,20 @@
+{
+  "name": "seatmapbuilder-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:json": "vitest run test/json-validation.test.ts",
+    "test:schema": "vitest run test/schema-validation.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8",
+    "zod": "^3.23.8"
+  }
+}
